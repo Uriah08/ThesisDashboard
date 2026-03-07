@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model announcements_announcementmodel {
+  id               BigInt           @id @default(autoincrement())
+  title            String           @db.VarChar(255)
+  content          String
+  status           String           @db.VarChar(50)
+  created_at       DateTime         @db.Timestamptz(6)
+  created_by_id    BigInt
+  farm_id          BigInt
+  expires_at       DateTime?        @db.Timestamptz(6)
+  users_customuser users_customuser @relation(fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "announcements_announ_created_by_id_7c624a19_fk_users_cus")
+  farms_farmmodel  farms_farmmodel  @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "announcements_announ_farm_id_d92c4391_fk_farms_far")
+
+  @@index([created_by_id], map: "announcements_announcementmodel_created_by_id_7c624a19")
+  @@index([farm_id], map: "announcements_announcementmodel_farm_id_d92c4391")
+}
+
+model auth_group {
+  id                      Int                       @id @default(autoincrement())
+  name                    String                    @unique @db.VarChar(150)
+  auth_group_permissions  auth_group_permissions[]
+  users_customuser_groups users_customuser_groups[]
+
+  @@index([name], map: "auth_group_name_a6ea08ec_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model auth_group_permissions {
+  id              BigInt          @id @default(autoincrement())
+  group_id        Int
+  permission_id   Int
+  auth_permission auth_permission @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_group_permissio_permission_id_84c5c92e_fk_auth_perm")
+  auth_group      auth_group      @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_group_permissions_group_id_b120cbf9_fk_auth_group_id")
+
+  @@unique([group_id, permission_id], map: "auth_group_permissions_group_id_permission_id_0cd325b0_uniq")
+  @@index([group_id], map: "auth_group_permissions_group_id_b120cbf9")
+  @@index([permission_id], map: "auth_group_permissions_permission_id_84c5c92e")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model auth_permission {
+  id                                Int                                 @id @default(autoincrement())
+  name                              String                              @db.VarChar(255)
+  content_type_id                   Int
+  codename                          String                              @db.VarChar(100)
+  auth_group_permissions            auth_group_permissions[]
+  django_content_type               django_content_type                 @relation(fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "auth_permission_content_type_id_2f476e4b_fk_django_co")
+  users_customuser_user_permissions users_customuser_user_permissions[]
+
+  @@unique([content_type_id, codename], map: "auth_permission_content_type_id_codename_01ab375a_uniq")
+  @@index([content_type_id], map: "auth_permission_content_type_id_2f476e4b")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model authtoken_token {
+  key              String           @id @db.VarChar(40)
+  created          DateTime         @db.Timestamptz(6)
+  user_id          BigInt           @unique
+  users_customuser users_customuser @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "authtoken_token_user_id_35299eff_fk_users_customuser_id")
+
+  @@index([key], map: "authtoken_token_key_10f0b77e_like")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model django_admin_log {
+  id                  Int                  @id @default(autoincrement())
+  action_time         DateTime             @db.Timestamptz(6)
+  object_id           String?
+  object_repr         String               @db.VarChar(200)
+  action_flag         Int                  @db.SmallInt
+  change_message      String
+  content_type_id     Int?
+  user_id             BigInt
+  django_content_type django_content_type? @relation(fields: [content_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "django_admin_log_content_type_id_c4bce8eb_fk_django_co")
+  users_customuser    users_customuser     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "django_admin_log_user_id_c564eba6_fk_users_customuser_id")
+
+  @@index([content_type_id], map: "django_admin_log_content_type_id_c4bce8eb")
+  @@index([user_id], map: "django_admin_log_user_id_c564eba6")
+}
+
+model django_content_type {
+  id               Int                @id @default(autoincrement())
+  app_label        String             @db.VarChar(100)
+  model            String             @db.VarChar(100)
+  auth_permission  auth_permission[]
+  django_admin_log django_admin_log[]
+
+  @@unique([app_label, model], map: "django_content_type_app_label_model_76bd3d3b_uniq")
+}
+
+model django_migrations {
+  id      BigInt   @id @default(autoincrement())
+  app     String   @db.VarChar(255)
+  name    String   @db.VarChar(255)
+  applied DateTime @db.Timestamptz(6)
+}
+
+model django_session {
+  session_key  String   @id @db.VarChar(40)
+  session_data String
+  expire_date  DateTime @db.Timestamptz(6)
+
+  @@index([expire_date], map: "django_session_expire_date_a5c62663")
+  @@index([session_key], map: "django_session_session_key_c0390e0f_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model farm_sessions_farmsessionmodel {
+  id              BigInt          @id @default(autoincrement())
+  name            String          @db.VarChar(255)
+  description     String?
+  status          String          @db.VarChar(50)
+  start_time      DateTime?       @db.Timestamptz(6)
+  end_time        DateTime?       @db.Timestamptz(6)
+  created_at      DateTime        @db.Timestamptz(6)
+  farm_id         BigInt
+  farms_farmmodel farms_farmmodel @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farm_sessions_farmse_farm_id_9a5fd780_fk_farms_far")
+
+  @@index([farm_id], map: "farm_sessions_farmsessionmodel_farm_id_9a5fd780")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model farm_trays_farmtraymodel {
+  id                     BigInt                   @id @default(autoincrement())
+  name                   String                   @db.VarChar(255)
+  description            String?
+  status                 String                   @db.VarChar(50)
+  created_at             DateTime                 @db.Timestamptz(6)
+  farm_id                BigInt
+  farms_farmmodel        farms_farmmodel          @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farm_trays_farmtraymodel_farm_id_d5084c3a_fk_farms_farmmodel_id")
+  trays_sessiontraymodel trays_sessiontraymodel[]
+
+  @@index([farm_id], map: "farm_trays_farmtraymodel_farm_id_d5084c3a")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model farms_farmmodel {
+  id                              BigInt                            @id @default(autoincrement())
+  name                            String                            @db.VarChar(132)
+  description                     String?
+  image_url                       String?                           @db.VarChar(200)
+  password                        String                            @db.VarChar(128)
+  owner_id                        BigInt
+  create_at                       DateTime                          @db.Date
+  announcements_announcementmodel announcements_announcementmodel[]
+  farm_sessions_farmsessionmodel  farm_sessions_farmsessionmodel[]
+  farm_trays_farmtraymodel        farm_trays_farmtraymodel[]
+  users_customuser                users_customuser                  @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farms_farmmodel_owner_id_b7d62034_fk_users_customuser_id")
+  farms_farmmodel_blocked         farms_farmmodel_blocked[]
+  farms_farmmodel_members         farms_farmmodel_members[]
+  production_farmproductionmodel  production_farmproductionmodel[]
+
+  @@index([owner_id], map: "farms_farmmodel_owner_id_b7d62034")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model farms_farmmodel_blocked {
+  id               BigInt           @id @default(autoincrement())
+  farmmodel_id     BigInt
+  customuser_id    BigInt
+  users_customuser users_customuser @relation(fields: [customuser_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farms_farmmodel_bloc_customuser_id_e41f2b8e_fk_users_cus")
+  farms_farmmodel  farms_farmmodel  @relation(fields: [farmmodel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farms_farmmodel_bloc_farmmodel_id_be611ca8_fk_farms_far")
+
+  @@unique([farmmodel_id, customuser_id], map: "farms_farmmodel_blocked_farmmodel_id_customuser__320ab2d1_uniq")
+  @@index([customuser_id], map: "farms_farmmodel_blocked_customuser_id_e41f2b8e")
+  @@index([farmmodel_id], map: "farms_farmmodel_blocked_farmmodel_id_be611ca8")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model farms_farmmodel_members {
+  id               BigInt           @id @default(autoincrement())
+  farmmodel_id     BigInt
+  customuser_id    BigInt
+  users_customuser users_customuser @relation(fields: [customuser_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farms_farmmodel_memb_customuser_id_9b0e4587_fk_users_cus")
+  farms_farmmodel  farms_farmmodel  @relation(fields: [farmmodel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "farms_farmmodel_memb_farmmodel_id_246f8cd6_fk_farms_far")
+
+  @@unique([farmmodel_id, customuser_id], map: "farms_farmmodel_members_farmmodel_id_customuser__5a4b1823_uniq")
+  @@index([customuser_id], map: "farms_farmmodel_members_customuser_id_9b0e4587")
+  @@index([farmmodel_id], map: "farms_farmmodel_members_farmmodel_id_246f8cd6")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model notifications_devicetoken {
+  id               BigInt            @id @default(autoincrement())
+  token            String            @db.VarChar(255)
+  created_at       DateTime          @db.Timestamptz(6)
+  user_id          BigInt?
+  users_customuser users_customuser? @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notifications_device_user_id_31bb415d_fk_users_cus")
+
+  @@unique([user_id, token], map: "notifications_devicetoken_user_id_token_d24e79f3_uniq")
+  @@index([user_id], map: "notifications_devicetoken_user_id_31bb415d")
+}
+
+model notifications_notification {
+  id                      BigInt                    @id @default(autoincrement())
+  title                   String                    @db.VarChar(255)
+  type                    String                    @db.VarChar(100)
+  body                    String
+  data                    Json
+  created_at              DateTime                  @db.Timestamptz(6)
+  updated_at              DateTime                  @db.Timestamptz(6)
+  notifications_recipient notifications_recipient[]
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model notifications_recipient {
+  id                         BigInt                     @id @default(autoincrement())
+  read                       Boolean
+  read_at                    DateTime?                  @db.Timestamptz(6)
+  created_at                 DateTime                   @db.Timestamptz(6)
+  notification_id            BigInt
+  user_id                    BigInt
+  notifications_notification notifications_notification @relation(fields: [notification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notifications_recipi_notification_id_5126e630_fk_notificat")
+  users_customuser           users_customuser           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notifications_recipient_user_id_b31c5271_fk_users_customuser_id")
+
+  @@unique([notification_id, user_id], map: "notifications_recipient_notification_id_user_id_40021d4a_uniq")
+  @@index([notification_id], map: "notifications_recipient_notification_id_5126e630")
+  @@index([user_id], map: "notifications_recipient_user_id_b31c5271")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model production_farmproductionmodel {
+  id              BigInt          @id @default(autoincrement())
+  title           String          @db.VarChar(255)
+  notes           String?
+  satisfaction    Int
+  quantity        Float
+  landing         String?         @db.VarChar(255)
+  created_at      DateTime        @db.Timestamptz(6)
+  farm_id         BigInt
+  farms_farmmodel farms_farmmodel @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "production_farmprodu_farm_id_f8677256_fk_farms_far")
+
+  @@index([farm_id], map: "production_farmproductionmodel_farm_id_f8677256")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model trays_sessiontraymodel {
+  id                       BigInt                   @id @default(autoincrement())
+  created_at               DateTime                 @db.Timestamptz(6)
+  finished_at              DateTime?                @db.Timestamptz(6)
+  created_by_id            BigInt
+  tray_id                  BigInt
+  users_customuser         users_customuser         @relation(fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trays_sessiontraymod_created_by_id_821d1229_fk_users_cus")
+  farm_trays_farmtraymodel farm_trays_farmtraymodel @relation(fields: [tray_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trays_sessiontraymod_tray_id_a76b526c_fk_farm_tray")
+  trays_traystepmodel      trays_traystepmodel[]
+
+  @@index([created_by_id], map: "trays_sessiontraymodel_created_by_id_821d1229")
+  @@index([tray_id], map: "trays_sessiontraymodel_tray_id_a76b526c")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model trays_traystepmodel {
+  id                     BigInt                 @id @default(autoincrement())
+  title                  String                 @db.VarChar(100)
+  description            String?
+  image                  String?
+  datetime               DateTime               @db.Timestamptz(6)
+  tray_id                BigInt
+  created_by_id          BigInt
+  detected               Int?
+  rejects                Int?
+  users_customuser       users_customuser       @relation(fields: [created_by_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trays_traystepmodel_created_by_id_7796e97e_fk_users_cus")
+  trays_sessiontraymodel trays_sessiontraymodel @relation(fields: [tray_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "trays_traystepmodel_tray_id_682907a5_fk_trays_ses")
+
+  @@index([created_by_id], map: "trays_traystepmodel_created_by_id_7796e97e")
+  @@index([tray_id], map: "trays_traystepmodel_tray_id_682907a5")
+}
+
+model users_customuser {
+  id                                BigInt                              @id @default(autoincrement())
+  password                          String                              @db.VarChar(128)
+  last_login                        DateTime?                           @db.Timestamptz(6)
+  is_superuser                      Boolean
+  username                          String                              @unique @db.VarChar(150)
+  first_name                        String                              @db.VarChar(150)
+  last_name                         String                              @db.VarChar(150)
+  email                             String                              @unique(map: "users_customuser_email_6445acef_uniq") @db.VarChar(254)
+  is_staff                          Boolean
+  is_active                         Boolean
+  date_joined                       DateTime                            @db.Timestamptz(6)
+  address                           String
+  birthday                          DateTime?                           @db.Date
+  is_complete                       Boolean
+  profile_picture                   String?                             @db.VarChar(200)
+  mobile_number                     String                              @default("") @db.VarChar(15)
+  announcements_announcementmodel   announcements_announcementmodel[]
+  authtoken_token                   authtoken_token?
+  django_admin_log                  django_admin_log[]
+  farms_farmmodel                   farms_farmmodel[]
+  farms_farmmodel_blocked           farms_farmmodel_blocked[]
+  farms_farmmodel_members           farms_farmmodel_members[]
+  notifications_devicetoken         notifications_devicetoken[]
+  notifications_recipient           notifications_recipient[]
+  trays_sessiontraymodel            trays_sessiontraymodel[]
+  trays_traystepmodel               trays_traystepmodel[]
+  users_customuser_groups           users_customuser_groups[]
+  users_customuser_user_permissions users_customuser_user_permissions[]
+
+  @@index([email], map: "users_customuser_email_6445acef_like")
+  @@index([username], map: "users_customuser_username_80452fdf_like")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model users_customuser_groups {
+  id               BigInt           @id @default(autoincrement())
+  customuser_id    BigInt
+  group_id         Int
+  users_customuser users_customuser @relation(fields: [customuser_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_customuser_gro_customuser_id_958147bf_fk_users_cus")
+  auth_group       auth_group       @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_customuser_groups_group_id_01390b14_fk_auth_group_id")
+
+  @@unique([customuser_id, group_id], map: "users_customuser_groups_customuser_id_group_id_76b619e3_uniq")
+  @@index([customuser_id], map: "users_customuser_groups_customuser_id_958147bf")
+  @@index([group_id], map: "users_customuser_groups_group_id_01390b14")
+}
+
+/// This model has constraints using non-default deferring rules and requires additional setup for migrations. Visit https://pris.ly/d/constraint-deferring for more info.
+model users_customuser_user_permissions {
+  id               BigInt           @id @default(autoincrement())
+  customuser_id    BigInt
+  permission_id    Int
+  users_customuser users_customuser @relation(fields: [customuser_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_customuser_use_customuser_id_5771478b_fk_users_cus")
+  auth_permission  auth_permission  @relation(fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_customuser_use_permission_id_baaa2f74_fk_auth_perm")
+
+  @@unique([customuser_id, permission_id], map: "users_customuser_user_pe_customuser_id_permission_7a7debf6_uniq")
+  @@index([customuser_id], map: "users_customuser_user_permissions_customuser_id_5771478b")
+  @@index([permission_id], map: "users_customuser_user_permissions_permission_id_baaa2f74")
+}
