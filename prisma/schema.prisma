@@ -293,6 +293,7 @@ model users_customuser {
   is_complete                       Boolean
   profile_picture                   String?                             @db.VarChar(200)
   mobile_number                     String                              @default("") @db.VarChar(15)
+  role                              String                              @db.VarChar(20)
   announcements_announcementmodel   announcements_announcementmodel[]
   authtoken_token                   authtoken_token?
   django_admin_log                  django_admin_log[]
