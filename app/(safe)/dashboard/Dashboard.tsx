@@ -5,7 +5,7 @@ import { useDashboardQuery } from "@/store/dashboardApi"
 import { Fish, Users, Package, Layers, MapPin, RefreshCw } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 
-const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
+const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"];
 
 const StatCard = ({
   icon, label, value, sub
