@@ -5,6 +5,7 @@ export type SessionUser = {
   id: string
   username: string
   email: string
+  role: string
 }
 
 export const sessionOptions: SessionOptions = {

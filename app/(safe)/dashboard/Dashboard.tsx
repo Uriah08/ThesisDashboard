@@ -4,23 +4,38 @@ import { SessionUser } from "@/lib/session"
 import { useDashboardQuery } from "@/store/dashboardApi"
 import { Fish, Users, Package, Layers, MapPin, RefreshCw } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
+import { AnnouncementsAnnouncementModel, FarmsFarmModel, ProductionFarmProductionModel, UsersCustomUser } from "@/lib/types"
 
-const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"];
+const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
 const StatCard = ({
   icon, label, value, sub
 }: {
   icon: React.ReactNode, label: string, value: string | number, sub?: string
 }) => (
-  <div className="bg-white rounded-xl border border-zinc-100 p-5 flex flex-col gap-3">
-    <div className="flex items-center justify-between">
-      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">{label}</p>
-      <div className="w-8 h-8 rounded-lg bg-[#155183]/8 flex items-center justify-center text-[#155183]">
+  <div style={{
+    background: "#155183",
+    borderRadius: 14,
+    padding: "20px 22px",
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    color: "#fff",
+  }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.7, margin: 0 }}>
+        {label}
+      </p>
+      <div style={{
+        width: 30, height: 30, borderRadius: 8,
+        background: "rgba(255,255,255,0.15)",
+        display: "flex", alignItems: "center", justifyContent: "center"
+      }}>
         {icon}
       </div>
     </div>
-    <p className="text-3xl font-bold text-zinc-900 tracking-tight">{value}</p>
-    {sub && <p className="text-xs text-zinc-400">{sub}</p>}
+    <p style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.02em", lineHeight: 1 }}>{value}</p>
+    {sub && <p style={{ fontSize: 11, opacity: 0.6, margin: 0 }}>{sub}</p>}
   </div>
 )
 
@@ -28,24 +43,35 @@ export default function Dashboard({ user }: { user: SessionUser }) {
   const { data, isLoading, refetch, isFetching } = useDashboardQuery()
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex">
+    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
 
       {/* ── Sidebar ── */}
       <Sidebar user={user} />
 
       {/* ── Main content ── */}
-      <main className="flex-1 lg:ml-56 p-6 md:p-8">
+      {/* pt-16 offsets the mobile topbar; lg:pt-0 resets it on desktop */}
+      <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mt-5" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">Overview</p>
-            <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Dashboard</h1>
+            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", opacity: 0.6, margin: "0 0 4px" }}>
+              Overview
+            </p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
+              Dashboard
+            </h1>
           </div>
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 12, color: "#155183",
+              background: "#fff", border: "1.5px solid #155183",
+              borderRadius: 8, padding: "7px 14px", cursor: "pointer",
+              fontWeight: 500, opacity: isFetching ? 0.6 : 1, transition: "opacity .2s"
+            }}
           >
             <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
             Refresh
@@ -53,159 +79,204 @@ export default function Dashboard({ user }: { user: SessionUser }) {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-3">
-              <Fish size={28} className="text-[#155183] animate-pulse" />
-              <p className="text-sm text-zinc-400">Loading dashboard...</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 256 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <Fish size={28} color="#155183" className="animate-pulse" />
+              <p style={{ fontSize: 13, color: "#155183", opacity: 0.5, margin: 0 }}>Loading dashboard...</p>
             </div>
           </div>
         ) : (
           <>
-            {/* ── Stat cards ── */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <StatCard icon={<Fish size={15} />} label="Total Farms" value={data?.stats.totalFarms ?? 0} />
-              <StatCard icon={<Users size={15} />} label="Total Users" value={data?.stats.totalUsers ?? 0} />
+            {/* ── Stat cards — 2 cols mobile, 4 cols desktop ── */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+              <StatCard icon={<Fish size={14} color="#fff" />} label="Total Farms" value={data?.stats.totalFarms ?? 0} />
+              <StatCard icon={<Users size={14} color="#fff" />} label="Total Users" value={data?.stats.totalUsers ?? 0} />
               <StatCard
-                icon={<Package size={15} />}
+                icon={<Package size={14} color="#fff" />}
                 label="Production"
                 value={`${Number(data?.stats.totalProductionKg ?? 0).toFixed(1)} kg`}
                 sub={`${data?.stats.totalProductionRecords ?? 0} records`}
               />
               <StatCard
-                icon={<Layers size={15} />}
+                icon={<Layers size={14} color="#fff" />}
                 label="Active Trays"
                 value={data?.stats.activeTrays ?? 0}
                 sub={`${data?.stats.activeSessions ?? 0} active sessions`}
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* ── Farms + Roles — stacked mobile, 3-col desktop ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
-              {/* ── Recent Farms ── */}
-              <div className="lg:col-span-2 bg-white rounded-xl border border-zinc-100 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Recent Farms</p>
-                  <span className="text-xs text-zinc-300">{data?.recentFarms?.length ?? 0} shown</span>
+              {/* Recent Farms */}
+              <div className="lg:col-span-2" style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: 0 }}>
+                    Recent Farms
+                  </p>
+                  <span style={{ fontSize: 11, color: "#9ab0c4" }}>{data?.recentFarms?.length ?? 0} shown</span>
                 </div>
-                <div className="flex flex-col gap-3">
-                  {data?.recentFarms?.map((farm: any) => (
-                    <div key={farm.id} className="flex items-center gap-3 py-2 border-b border-zinc-50 last:border-0">
-                      <div className="w-8 h-8 rounded-lg bg-[#155183]/8 flex items-center justify-center text-[#155183] shrink-0">
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {data?.recentFarms?.map((farm: FarmsFarmModel) => (
+                    <div key={farm.id} style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
+                    }} className="last:border-0">
+                      <div style={{
+                        width: 34, height: 34, borderRadius: 9,
+                        background: "#e8f0f8",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0, color: "#155183"
+                      }}>
                         <Fish size={14} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-900 truncate">{farm.name}</p>
-                        <p className="text-xs text-zinc-400">by {farm.users_customuser?.username}</p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {farm.name}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>by {farm.users_customuser?.username}</p>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
-                        <span className="flex items-center gap-1">
+                      {/* Farm meta hidden on small screens */}
+                      <div className="hidden sm:flex items-center gap-2" style={{ fontSize: 11, color: "#9ab0c4", flexShrink: 0 }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
                           <Users size={10} /> {farm.memberCount}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
                           <Layers size={10} /> {farm.trayCount}
                         </span>
-                        <span>{new Date(farm.create_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}</span>
+                        <span style={{
+                          background: "#e8f0f8", color: "#155183",
+                          fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20
+                        }}>
+                          {new Date(farm.create_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
+                        </span>
                       </div>
                     </div>
                   ))}
                   {!data?.recentFarms?.length && (
-                    <p className="text-sm text-zinc-300 text-center py-6">No farms yet</p>
+                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No farms yet</p>
                   )}
                 </div>
               </div>
 
-              {/* ── Users by role ── */}
-              <div className="bg-white rounded-xl border border-zinc-100 p-5">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-4">Users by Role</p>
-                <div className="flex flex-col gap-3">
-                  {data?.usersByRole?.map((r: any) => (
-                    <div key={r.role} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#155183]" />
-                        <p className="text-sm text-zinc-700 capitalize">{r.role || "—"}</p>
+              {/* Users by role */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
+                  Users by Role
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {data?.usersByRole?.map((r: UsersCustomUser) => (
+                    <div key={r.role} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#155183" }} />
+                        <p style={{ fontSize: 13, color: "#0d2e47", margin: 0, textTransform: "capitalize" }}>{r.role || "—"}</p>
                       </div>
-                      <span className="text-sm font-semibold text-zinc-900">{r._count}</span>
+                      <span style={{
+                        fontSize: 12, fontWeight: 700, color: "#155183",
+                        background: "#e8f0f8", padding: "2px 10px", borderRadius: 20
+                      }}>
+                        {r._count}
+                      </span>
                     </div>
                   ))}
                 </div>
 
                 {/* Avg satisfaction */}
-                <div className="mt-6 pt-5 border-t border-zinc-50">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">Avg Satisfaction</p>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">
+                <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1.5px solid #f0f4f8" }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 12px" }}>
+                    Avg Satisfaction
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 32 }}>
                       {SATISFACTION_EMOJIS[Math.round(data?.stats.avgSatisfaction ?? 3) - 1]}
                     </span>
                     <div>
-                      <p className="text-xl font-bold text-zinc-900">
+                      <p style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
                         {Number(data?.stats.avgSatisfaction ?? 0).toFixed(1)}
-                        <span className="text-sm font-normal text-zinc-400"> / 5</span>
+                        <span style={{ fontSize: 13, fontWeight: 400, color: "#9ab0c4" }}> / 5</span>
                       </p>
-                      <p className="text-xs text-zinc-400">across all production</p>
+                      <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>across all production</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ── Production + Announcements — stacked mobile, 2-col md+ ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              {/* ── Recent Production ── */}
-              <div className="bg-white rounded-xl border border-zinc-100 p-5">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-4">Recent Production</p>
-                <div className="flex flex-col gap-3">
-                  {data?.recentProduction?.map((p: any) => (
-                    <div key={p.id} className="flex items-center gap-3 py-2 border-b border-zinc-50 last:border-0">
-                      <span className="text-xl shrink-0">
+              {/* Recent Production */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
+                  Recent Production
+                </p>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {data?.recentProduction?.map((p: ProductionFarmProductionModel) => (
+                    <div key={p.id} style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
+                    }} className="last:border-0">
+                      <span style={{ fontSize: 22, flexShrink: 0 }}>
                         {SATISFACTION_EMOJIS[(p.satisfaction ?? 3) - 1]}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-900 truncate">{p.title}</p>
-                        <p className="text-xs text-zinc-400 flex items-center gap-1">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {p.title}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
                           <Fish size={9} /> {p.farms_farmmodel?.name}
-                          {p.landing && <><MapPin size={9} className="ml-1" />{p.landing}</>}
+                          {p.landing && <><MapPin size={9} style={{ marginLeft: 4 }} />{p.landing}</>}
                         </p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold text-[#155183]">{p.quantity} kg</p>
-                        <p className="text-[10px] text-zinc-400">
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: "#155183", margin: 0 }}>{p.quantity} kg</p>
+                        <p style={{ fontSize: 10, color: "#9ab0c4", margin: 0 }}>
                           {new Date(p.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
                         </p>
                       </div>
                     </div>
                   ))}
                   {!data?.recentProduction?.length && (
-                    <p className="text-sm text-zinc-300 text-center py-6">No production records</p>
+                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No production records</p>
                   )}
                 </div>
               </div>
 
-              {/* ── Recent Announcements ── */}
-              <div className="bg-white rounded-xl border border-zinc-100 p-5">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-4">Announcements</p>
-                <div className="flex flex-col gap-3">
-                  {data?.recentAnnouncements?.map((a: any) => (
-                    <div key={a.id} className="flex items-start gap-3 py-2 border-b border-zinc-50 last:border-0">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                        a.status === "active" ? "bg-green-400" : "bg-zinc-300"
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-900 truncate">{a.title}</p>
-                        <p className="text-xs text-zinc-400">
+              {/* Recent Announcements */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
+                  Announcements
+                </p>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {data?.recentAnnouncements?.map((a: AnnouncementsAnnouncementModel) => (
+                    <div key={a.id} style={{
+                      display: "flex", alignItems: "flex-start", gap: 10,
+                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
+                    }} className="last:border-0">
+                      <div style={{
+                        width: 8, height: 8, borderRadius: "50%", marginTop: 5, flexShrink: 0,
+                        background: a.status === "active" ? "#22c55e" : "#c5d5e4"
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {a.title}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>
                           {a.farms_farmmodel?.name} · by {a.users_customuser?.username}
                         </p>
                       </div>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                        a.status === "active"
-                          ? "bg-green-50 text-green-600"
-                          : "bg-zinc-100 text-zinc-500"
-                      }`}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700,
+                        padding: "3px 9px", borderRadius: 20, flexShrink: 0, marginTop: 1,
+                        background: a.status === "active" ? "#dcfce7" : "#f0f4f8",
+                        color: a.status === "active" ? "#15803d" : "#9ab0c4"
+                      }}>
                         {a.status}
                       </span>
                     </div>
                   ))}
                   {!data?.recentAnnouncements?.length && (
-                    <p className="text-sm text-zinc-300 text-center py-6">No announcements</p>
+                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No announcements</p>
                   )}
                 </div>
               </div>
