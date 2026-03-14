@@ -2,8 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface CreateAnnouncementPayload {
   title: string
-  content: string
-  status: "active" | "inactive"
+  body: string
   expires_at?: string
 }
 

@@ -5,6 +5,11 @@ import { useDashboardQuery } from "@/store/dashboardApi"
 import { Fish, Users, Package, Layers, MapPin, RefreshCw } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 import { AnnouncementsAnnouncementModel, FarmsFarmModel, ProductionFarmProductionModel, UsersCustomUser } from "@/lib/types"
+import {
+  BarChart, Bar,
+  LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from "recharts"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -42,6 +47,15 @@ const StatCard = ({
 export default function Dashboard({ user }: { user: SessionUser }) {
   const { data, isLoading, refetch, isFetching } = useDashboardQuery()
 
+  const productionChartData = data?.recentProduction
+    ?.slice()
+    .reverse()
+    .map((p: ProductionFarmProductionModel) => ({
+      name: p.title.length > 10 ? p.title.slice(0, 10) + "…" : p.title,
+      kg: p.quantity,
+      satisfaction: p.satisfaction ?? 0,
+    })) ?? []
+
   return (
     <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
 
@@ -49,7 +63,6 @@ export default function Dashboard({ user }: { user: SessionUser }) {
       <Sidebar user={user} />
 
       {/* ── Main content ── */}
-      {/* pt-16 offsets the mobile topbar; lg:pt-0 resets it on desktop */}
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8">
 
         {/* Header */}
@@ -87,7 +100,7 @@ export default function Dashboard({ user }: { user: SessionUser }) {
           </div>
         ) : (
           <>
-            {/* ── Stat cards — 2 cols mobile, 4 cols desktop ── */}
+            {/* ── Stat cards ── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <StatCard icon={<Fish size={14} color="#fff" />} label="Total Farms" value={data?.stats.totalFarms ?? 0} />
               <StatCard icon={<Users size={14} color="#fff" />} label="Total Users" value={data?.stats.totalUsers ?? 0} />
@@ -105,7 +118,57 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               />
             </div>
 
-            {/* ── Farms + Roles — stacked mobile, 3-col desktop ── */}
+            {/* ── Charts ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+              {/* Bar Chart — Production Quantity */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 4px" }}>
+                  Production Quantity
+                </p>
+                <p style={{ fontSize: 11, color: "#9ab0c4", margin: "0 0 16px" }}>kg per record (oldest → newest)</p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }}
+                    />
+                    <Bar dataKey="kg" fill="#155183" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Line Chart — Satisfaction Trend */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 4px" }}>
+                  Satisfaction Trend
+                </p>
+                <p style={{ fontSize: 11, color: "#9ab0c4", margin: "0 0 16px" }}>score per record (1–5, oldest → newest)</p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="satisfaction"
+                      stroke="#155183"
+                      strokeWidth={2}
+                      dot={{ fill: "#155183", r: 4, strokeWidth: 0 }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+            </div>
+
+            {/* ── Farms + Roles ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
               {/* Recent Farms */}
@@ -136,7 +199,6 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                         </p>
                         <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>by {farm.users_customuser?.username}</p>
                       </div>
-                      {/* Farm meta hidden on small screens */}
                       <div className="hidden sm:flex items-center gap-2" style={{ fontSize: 11, color: "#9ab0c4", flexShrink: 0 }}>
                         <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
                           <Users size={10} /> {farm.memberCount}
@@ -202,7 +264,7 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               </div>
             </div>
 
-            {/* ── Production + Announcements — stacked mobile, 2-col md+ ── */}
+            {/* ── Production + Announcements ── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               {/* Recent Production */}
