@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import {
-  Megaphone, Search, Plus, X, CalendarDays, Users, Clock
+  Megaphone, Search, Plus, X, CalendarDays, Clock
 } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 import { SessionUser } from "@/lib/session"
@@ -18,27 +18,15 @@ import {
 interface Announcement {
   id: string
   title: string
-  content: string
-  status: string
+  body: string
+  data: { created_by: string; expires_at?: string | null }
   created_at: string
-  expires_at?: string
-  users_customuser?: { id: string; username: string; profile_picture?: string }
+  updated_at: string
+  users_customuser: {
+    username: string
+  }
 }
 
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-function StatusBadge({ status }: { status: string }) {
-  const active = status === "active"
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20,
-      background: active ? "#dcfce7" : "#f0f4f8",
-      color: active ? "#15803d" : "#9ab0c4",
-    }}>
-      {status}
-    </span>
-  )
-}
 
 // ── Announcement drawer ───────────────────────────────────────────────────────
 function AnnouncementDrawer({ announcement, onClose }: { announcement: Announcement; onClose: () => void }) {
@@ -68,9 +56,6 @@ function AnnouncementDrawer({ announcement, onClose }: { announcement: Announcem
           >
             <X size={14} />
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-            <StatusBadge status={announcement.status} />
-          </div>
           <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.01em", lineHeight: 1.4 }}>
             {announcement.title}
           </h2>
@@ -78,16 +63,16 @@ function AnnouncementDrawer({ announcement, onClose }: { announcement: Announcem
 
         <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-          {/* Content */}
+          {/* Body */}
           <div>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 10px" }}>
-              Content
+              Message
             </p>
             <p style={{
               fontSize: 13, color: "#0d2e47", lineHeight: 1.7, margin: 0,
               background: "#f0f4f8", borderRadius: 10, padding: "14px 16px",
             }}>
-              {announcement.content}
+              {announcement.body}
             </p>
           </div>
 
@@ -97,9 +82,8 @@ function AnnouncementDrawer({ announcement, onClose }: { announcement: Announcem
               Details
             </p>
             {[
-                { label: "Posted by", value: announcement.users_customuser?.username ?? "—", icon: <Users size={11} /> },
-              { label: "Created", value: new Date(announcement.created_at).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }), icon: <CalendarDays size={11} /> },
-              { label: "Expires", value: announcement.expires_at ? new Date(announcement.expires_at).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) : "No expiry", icon: <Clock size={11} /> },
+    { label: "Sent", value: new Date(announcement.created_at).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }), icon: <CalendarDays size={11} /> },
+              { label: "Expires", value: announcement.data?.expires_at ? new Date(announcement.data.expires_at).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) : "No expiry", icon: <Clock size={11} /> },
             ].map(row => (
               <div key={row.label} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -124,8 +108,7 @@ const { mutate: createAnnouncement, isPending } = useCreateAnnouncementMutation(
 
   const [form, setForm] = useState({
     title: "",
-    content: "",
-    status: "active" as "active" | "inactive",
+    body: "",
     expires_at: "",
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -138,7 +121,7 @@ const { mutate: createAnnouncement, isPending } = useCreateAnnouncementMutation(
   const validate = () => {
     const e: Record<string, string> = {}
     if (!form.title.trim()) e.title = "Title is required"
-    if (!form.content.trim()) e.content = "Content is required"
+    if (!form.body.trim()) e.body = "Body is required"
     return e
   }
 
@@ -146,10 +129,10 @@ const { mutate: createAnnouncement, isPending } = useCreateAnnouncementMutation(
     const e = validate()
     if (Object.keys(e).length > 0) { setErrors(e); return }
     createAnnouncement(
-      { title: form.title, content: form.content, status: form.status, expires_at: form.expires_at || undefined },
+      { title: form.title, body: form.body, expires_at: form.expires_at || undefined },
       {
         onSuccess: () => {
-          setForm({ title: "", content: "", status: "active", expires_at: "" })
+          setForm({ title: "", body: "", expires_at: "" })
           setErrors({})
           onClose()
         },
@@ -204,44 +187,31 @@ const { mutate: createAnnouncement, isPending } = useCreateAnnouncementMutation(
             {errors.title && <p style={{ fontSize: 11, color: "#ef4444", margin: "4px 0 0" }}>{errors.title}</p>}
           </div>
 
-          {/* Content */}
+          {/* Body */}
           <div>
-            <label style={labelStyle}>Content</label>
+            <label style={labelStyle}>Body</label>
             <textarea
-              value={form.content}
-              onChange={e => set("content", e.target.value)}
+              value={form.body}
+              onChange={e => set("body", e.target.value)}
               placeholder="Write your announcement here…"
               rows={4}
-              style={{ ...inputStyle(errors.content), resize: "vertical", lineHeight: 1.6 }}
+              style={{ ...inputStyle(errors.body), resize: "vertical", lineHeight: 1.6 }}
             />
-            {errors.content && <p style={{ fontSize: 11, color: "#ef4444", margin: "4px 0 0" }}>{errors.content}</p>}
+            {errors.body && <p style={{ fontSize: 11, color: "#ef4444", margin: "4px 0 0" }}>{errors.body}</p>}
           </div>
 
 
-          {/* Status + Expires row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Status</label>
-              <select
-                value={form.status}
-                onChange={e => set("status", e.target.value)}
-                style={inputStyle()}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>
-                Expires at <span style={{ opacity: 0.5, textTransform: "none", fontSize: 10 }}>(optional)</span>
-              </label>
-              <input
-                type="date"
-                value={form.expires_at}
-                onChange={e => set("expires_at", e.target.value)}
-                style={inputStyle()}
-              />
-            </div>
+          {/* Expires */}
+          <div>
+            <label style={labelStyle}>
+              Expires at <span style={{ opacity: 0.5, textTransform: "none", fontSize: 10 }}>(optional)</span>
+            </label>
+            <input
+              type="date"
+              value={form.expires_at}
+              onChange={e => set("expires_at", e.target.value)}
+              style={inputStyle()}
+            />
           </div>
         </div>
 
@@ -282,16 +252,14 @@ export default function AnnouncementsPage({ user }: { user: SessionUser }) {
   const { data: announcements = [], isLoading } = useAnnouncementsQuery()
 
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [selected, setSelected] = useState<Announcement | null>(null)
+const [selected, setSelected] = useState<Announcement | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
   const filtered: Announcement[] = announcements.filter((a: Announcement) => {
     const matchSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
 a.users_customuser?.username.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === "all" || a.status === statusFilter
-    return matchSearch && matchStatus
+    return matchSearch
   })
 
   return (
@@ -343,24 +311,7 @@ a.users_customuser?.username.toLowerCase().includes(search.toLowerCase())
               {filtered.length}
             </span>
           </div>
-          {/* Status filter */}
-          {["all", "active", "inactive"].map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              style={{
-                fontSize: 11, fontWeight: 600, padding: "5px 14px", borderRadius: 20,
-                border: "1.5px solid",
-                borderColor: statusFilter === s ? "#155183" : "#e2eaf2",
-                background: statusFilter === s ? "#155183" : "#fff",
-                color: statusFilter === s ? "#fff" : "#9ab0c4",
-                cursor: "pointer", textTransform: "capitalize", transition: "all .15s",
-                flexShrink: 0,
-              }}
-            >
-              {s}
-            </button>
-          ))}
+
         </div>
 
         {/* List */}
@@ -400,12 +351,12 @@ a.users_customuser?.username.toLowerCase().includes(search.toLowerCase())
             <div
               className="hidden md:grid"
               style={{
-                display: "grid", gridTemplateColumns: "3fr 1fr 1fr",
+                display: "grid", gridTemplateColumns: "3fr 1fr",
                 padding: "10px 20px", borderBottom: "1.5px solid #f0f4f8",
                 background: "#fafbfc",
               }}
             >
-              {["Announcement", "Posted by", "Date"].map(h => (
+              {["Announcement", "Date"].map(h => (
                 <span key={h} style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase", color: "#9ab0c4" }}>
                   {h}
                 </span>
@@ -416,7 +367,7 @@ a.users_customuser?.username.toLowerCase().includes(search.toLowerCase())
               <div
                 key={String(a.id)}
                 onClick={() => setSelected(a)}
-                className="grid grid-cols-1 md:grid-cols-[3fr_1fr_1fr]"
+                className="grid grid-cols-1 md:grid-cols-[3fr_1fr]"
                 style={{
                   padding: "13px 20px", borderBottom: "1px solid #f0f4f8",
                   cursor: "pointer", transition: "background .1s",
@@ -424,28 +375,22 @@ a.users_customuser?.username.toLowerCase().includes(search.toLowerCase())
                 onMouseEnter={e => (e.currentTarget.style.background = "#fafbfc")}
                 onMouseLeave={e => (e.currentTarget.style.background = "none")}
               >
-                {/* Title + status */}
+                {/* Title + body preview */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{
                     width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                    background: a.status === "active" ? "#22c55e" : "#c5d5e4",
+                    background: "#155183", opacity: 0.4,
                   }} />
                   <div style={{ minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {a.title}
                     </p>
                     <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {a.content}
+                      {a.body}
                     </p>
                   </div>
                 </div>
-                <div className="hidden md:flex items-center">
-                  <span style={{ fontSize: 11, color: "#9ab0c4" }}>
-                    {a.users_customuser?.username ?? "—"}
-                  </span>
-                </div>
-
-                <div className="hidden md:flex items-center">
+<div className="hidden md:flex items-center">
                   <span style={{ fontSize: 11, color: "#9ab0c4", display: "flex", alignItems: "center", gap: 4 }}>
                     <CalendarDays size={10} />
                     {new Date(a.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
