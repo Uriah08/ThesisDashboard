@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState, useEffect } from "react"
 
 const NAV_LINKS = ["Features", "How It Works", "About", "Download"]
@@ -64,7 +65,10 @@ export default function LandingPage() {
 
       {/* ── NAV ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 h-16 bg-white/90 backdrop-blur-md transition-all duration-300 ${scrolled ? "border-b border-zinc-100" : ""}`}>
-        <span className="text-[#155183] font-bold text-lg tracking-tight">FishFarm</span>
+        <div className="flex items-center gap-3">
+          <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
+          <Image src="/doa.png" alt="DOA" width={50} height={50} className="w-10"/>
+        </div>
 
         <ul className="hidden md:flex items-center gap-8">
           {NAV_LINKS.map(link => (
@@ -76,45 +80,48 @@ export default function LandingPage() {
           ))}
         </ul>
 
-        <a href="/auth/sign-in" className="border border-[#155183] text-[#155183] hover:bg-[#155183] hover:text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
+        <a href="/auth/sign-in" className="border border-[#155183] text-[#155183] hover:bg-[#155183] hover:text-white text-sm font-medium px-5 py-2 rounded-full transition-colors">
           Admin Sign In
         </a>
       </nav>
 
       {/* ── HERO ── */}
       <section className="min-h-screen flex flex-col justify-center px-8 md:px-16 pt-24 pb-20">
-        <div className="max-w-4xl">
-          <p className="flex items-center gap-2 text-[#155183] text-xs font-semibold tracking-widest uppercase mb-6">
-            <span className="w-6 h-px bg-[#155183]" />
-            AI-Powered · Built for Filipino Naic Sun Dried Fish Farmers
-          </p>
+          <div className="max-w-4xl z-20">
+            <p className="flex items-center gap-2 text-[#155183] text-xs font-semibold tracking-widest uppercase mb-6">
+              <span className="w-6 h-px bg-[#155183]" />
+              AI-Powered · Built for Filipino Naic Sun Dried Fish Farmers
+            </p>
 
-          <h1 className="text-5xl md:text-7xl font-bold leading-[1.08] tracking-tight text-zinc-900 mb-6">
-            Manage your <br />
-            <span className="text-[#155183] italic font-serif">sundried fish</span> <br />
-            farm with ease.
-          </h1>
+            <h1 className="text-5xl md:text-7xl font-bold leading-[1.08] tracking-tight text-zinc-900 mb-6">
+              Manage your <br />
+              <span className="text-[#155183] italic font-serif">sundried fish</span> <br />
+              farm with ease.
+            </h1>
 
-          <p className="text-lg text-zinc-500 font-light max-w-md leading-relaxed mb-10">
-            Point. Scan. Decide. FiScan uses image processing to tell you if your fish is dry enough — then helps you log production and track sales.
-          </p>
+            <p className="text-lg text-zinc-500 font-light max-w-md leading-relaxed mb-10">
+              Point. Scan. Decide. FiScan uses image processing to tell you if your fish is dry enough — then helps you log production and track sales.
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <a href="#download" className="bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-3.5 rounded-lg transition-all hover:-translate-y-0.5 text-sm flex items-center gap-2">
-              <span>⬇</span> Download the App
-            </a>
-          </div>
-        </div>
-
-        {/* Decorative stat row */}
-        <div className="mt-20 flex flex-wrap gap-x-12 gap-y-6">
-          {[["500+", "Farms registered"], ["12k+", "Batches logged"], ["₱2M+", "Sales tracked"]].map(([val, label]) => (
-            <div key={label}>
-              <p className="text-2xl font-bold text-[#155183]">{val}</p>
-              <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <a href="#download" className="bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-3.5 rounded-lg transition-all hover:-translate-y-0.5 text-sm flex items-center gap-2">
+                <span>⬇</span> Download the App
+              </a>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* Decorative stat row */}
+          <div className="mt-20 flex flex-wrap gap-x-12 gap-y-6">
+            {[["500+", "Farms registered"], ["12k+", "Batches logged"], ["₱2M+", "Sales tracked"]].map(([val, label]) => (
+              <div key={label}>
+                <p className="text-2xl font-bold text-[#155183]">{val}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        <Image src={'/cover.jpg'} width={1000} height={1000} alt="Cover" className="absolute right-0 top-0 z-10 
+             mask-[linear-gradient(to_right,transparent,black)] 
+             [WebkitMaskImage:linear-gradient(to_right,transparent,black)] hidden lg:block"/>
       </section>
 
       {/* ── FEATURES ── */}
@@ -220,7 +227,7 @@ export default function LandingPage() {
 
       {/* ── FOOTER ── */}
       <footer className="px-8 md:px-16 py-8 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span className="text-[#155183] font-bold text-sm">FiScan</span>
+        <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
         <p className="text-zinc-400 text-xs">© {new Date().getFullYear()} FiScan. All rights reserved.</p>
       </footer>
 
