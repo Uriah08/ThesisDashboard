@@ -5,8 +5,9 @@ import { useForm } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Loader2, Fish } from "lucide-react"
+import { Eye, EyeOff, Loader2, Fish, ChevronLeft } from "lucide-react"
 import { useSignInMutation } from "@/store/authApi"
+import { useRouter } from "next/navigation"
 
 type FormValues = {
   username: string
@@ -14,6 +15,7 @@ type FormValues = {
 }
 
 export default function SignInPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [focused, setFocused] = useState<string | null>(null)
 
@@ -41,12 +43,7 @@ export default function SignInPage() {
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5" />
 
         {/* Logo */}
-        <div className="flex items-center gap-2 z-10">
-          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
-            <Fish size={16} className="text-white" />
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight">FiScan</span>
-        </div>
+        <ChevronLeft size={40} className="text-[#ffffff] cursor-pointer p-2 rounded-full bg-[#1c5f95] hover:bg-[#276faa]" onClick={() => router.push('/')}/>
 
         {/* Center content */}
         <div className="z-10">
