@@ -5,9 +5,10 @@ import { useForm } from "react-hook-form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Loader2, Fish, ChevronLeft } from "lucide-react"
+import { Eye, EyeOff, Loader2, ChevronLeft } from "lucide-react"
 import { useSignInMutation } from "@/store/authApi"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 type FormValues = {
   username: string
@@ -74,10 +75,7 @@ export default function SignInPage() {
 
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-8 h-8 rounded-lg bg-[#155183] flex items-center justify-center">
-              <Fish size={15} className="text-white" />
-            </div>
-            <span className="text-[#155183] font-bold text-lg tracking-tight">FiScan</span>
+            <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
           </div>
 
           {/* Heading */}

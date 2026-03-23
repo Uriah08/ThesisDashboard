@@ -4,6 +4,8 @@ import { Fish, LayoutDashboard, Users, Megaphone, LogOut, Menu, X } from "lucide
 import { useLogoutMutation } from "@/store/authApi"
 import { SessionUser } from "@/lib/session"
 import { useState } from "react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 const NAV_ITEMS = [
   { icon: <LayoutDashboard size={15} />, label: "Dashboard", href: "/dashboard" },
@@ -25,14 +27,12 @@ function SidebarContent({
   onClose: () => void
   onLogout: () => void
 }) {
+  const router = useRouter()
   return (
     <>
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8 px-2">
-        <div className="w-7 h-7 rounded-lg bg-[#155183] flex items-center justify-center">
-          <Fish size={14} className="text-white" />
-        </div>
-        <span className="text-[#155183] font-bold text-base tracking-tight">FiScan</span>
+        <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5 h-8 cursor-pointer"/>
       </div>
 
       {/* Nav */}
@@ -92,16 +92,14 @@ export default function Sidebar({ user, active }: { user: SessionUser; active?: 
     onClose: () => setOpen(false),
     onLogout: () => logout(),
   }
+  const router = useRouter()
 
   return (
     <>
       {/* ── Mobile top bar ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-100">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#155183] flex items-center justify-center">
-            <Fish size={14} className="text-white" />
-          </div>
-          <span className="text-[#155183] font-bold text-base tracking-tight">FiScan</span>
+          <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5 h-8 cursor-pointer"/>
         </div>
         <button
           onClick={() => setOpen(v => !v)}

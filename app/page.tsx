@@ -104,8 +104,8 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <a href="#download" className="bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-3.5 rounded-lg transition-all hover:-translate-y-0.5 text-sm flex items-center gap-2">
-                <span>⬇</span> Download the App
+              <a href="/documentation" className="bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-3.5 rounded-lg transition-all hover:-translate-y-0.5 text-sm flex items-center gap-2">
+                <span>Documentation</span>
               </a>
             </div>
           </div>
