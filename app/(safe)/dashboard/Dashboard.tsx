@@ -10,6 +10,7 @@ import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts"
+import { useState } from "react"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -44,8 +45,12 @@ const StatCard = ({
   </div>
 )
 
+type Period = "week" | "month" | "3months" | null
+
 export default function Dashboard({ user }: { user: SessionUser }) {
-  const { data, isLoading, refetch, isFetching } = useDashboardQuery()
+  
+  const [period, setPeriod] = useState<Period>(null)
+  const { data, isLoading, refetch, isFetching } = useDashboardQuery(period)
 
   const productionChartData = data?.recentProduction
     ?.slice()
@@ -75,20 +80,50 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               Dashboard
             </h1>
           </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, color: "#155183",
-              background: "#fff", border: "1.5px solid #155183",
-              borderRadius: 8, padding: "7px 14px", cursor: "pointer",
-              fontWeight: 500, opacity: isFetching ? 0.6 : 1, transition: "opacity .2s"
-            }}
-          >
-            <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
-            Refresh
-          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Period filter buttons */}
+            {([
+              { label: "All time", value: null },
+              { label: "Week",     value: "week" },
+              { label: "Month",    value: "month" },
+              { label: "3 Months", value: "3months" },
+            ] as { label: string; value: Period }[]).map(opt => (
+              <button
+                key={String(opt.value)}
+                onClick={() => setPeriod(opt.value)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: "1.5px solid #155183",
+                  cursor: "pointer",
+                  transition: "all .15s",
+                  background: period === opt.value ? "#155183" : "#fff",
+                  color:      period === opt.value ? "#fff"    : "#155183",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+
+            {/* Refresh button */}
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                fontSize: 12, color: "#155183",
+                background: "#fff", border: "1.5px solid #155183",
+                borderRadius: 8, padding: "7px 14px", cursor: "pointer",
+                fontWeight: 500, opacity: isFetching ? 0.6 : 1, transition: "opacity .2s"
+              }}
+            >
+              <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {isLoading ? (

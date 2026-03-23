@@ -3,9 +3,23 @@ import { serialize } from "@/lib/serializer"
 import { getSession } from "@/lib/session"
 import { NextResponse } from "next/server"
 
-export async function GET() {
+function getPeriodStart(period: string | null): Date | null {
+  if (!period) return null
+  const now = new Date()
+  if (period === "week") return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  if (period === "month") return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  if (period === "3months") return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+  return null
+}
+
+export async function GET(request: Request) {
   const session = await getSession()
   if (!session.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+
+  const { searchParams } = new URL(request.url)
+  const period = searchParams.get("period")
+  const since = getPeriodStart(period)
+  const dateFilter = since ? { gte: since } : undefined
 
   const [
     totalFarms,
@@ -19,33 +33,37 @@ export async function GET() {
     usersByRole,
   ] = await Promise.all([
 
-    // Total farms
-    prisma.farms_farmmodel.count(),
+    prisma.farms_farmmodel.count(
+      dateFilter ? { where: { create_at: dateFilter } } : undefined
+    ),
 
-    // Total users
     prisma.users_customuser.count(),
 
-    // Total production quantity
     prisma.production_farmproductionmodel.aggregate({
+      where: dateFilter ? { created_at: dateFilter } : undefined,
       _sum: { quantity: true },
       _count: true,
       _avg: { satisfaction: true },
     }),
 
-    // Active farm sessions
     prisma.farm_sessions_farmsessionmodel.count({
-      where: { status: "active" },
+      where: {
+        status: "active",
+        ...(dateFilter ? { created_at: dateFilter } : {}),
+      },
     }),
 
-    // Active trays
     prisma.farm_trays_farmtraymodel.count({
-      where: { status: "active" },
+      where: {
+        status: "active",
+        ...(dateFilter ? { created_at: dateFilter } : {}),
+      },
     }),
 
-    // Recent farms with owner + member count
     prisma.farms_farmmodel.findMany({
       take: 6,
       orderBy: { create_at: "desc" },
+      where: dateFilter ? { create_at: dateFilter } : undefined,
       select: {
         id: true,
         name: true,
@@ -59,10 +77,10 @@ export async function GET() {
       }
     }),
 
-    // Recent production records
     prisma.production_farmproductionmodel.findMany({
       take: 5,
       orderBy: { created_at: "desc" },
+      where: dateFilter ? { created_at: dateFilter } : undefined,
       select: {
         id: true,
         title: true,
@@ -74,10 +92,10 @@ export async function GET() {
       }
     }),
 
-    // Recent announcements
     prisma.announcements_announcementmodel.findMany({
       take: 4,
       orderBy: { created_at: "desc" },
+      where: dateFilter ? { created_at: dateFilter } : undefined,
       select: {
         id: true,
         title: true,
@@ -89,7 +107,6 @@ export async function GET() {
       }
     }),
 
-    // Users grouped by role
     prisma.users_customuser.groupBy({
       by: ["role"],
       _count: true,
@@ -97,22 +114,22 @@ export async function GET() {
   ])
 
   return NextResponse.json(serialize({
-  stats: {
-    totalFarms,
-    totalUsers,
-    totalProductionKg: totalProduction._sum.quantity ?? 0,
-    totalProductionRecords: totalProduction._count,
-    avgSatisfaction: totalProduction._avg.satisfaction ?? 0,
-    activeSessions,
-    activeTrays,
-  },
-  recentFarms: recentFarms.map(f => ({
-    ...f,
-    memberCount: f.farms_farmmodel_members.length,
-    trayCount: f.farm_trays_farmtraymodel.length,
-  })),
-  recentProduction,
-  recentAnnouncements,
-  usersByRole,
-}))
+    stats: {
+      totalFarms,
+      totalUsers,
+      totalProductionKg: totalProduction._sum.quantity ?? 0,
+      totalProductionRecords: totalProduction._count,
+      avgSatisfaction: totalProduction._avg.satisfaction ?? 0,
+      activeSessions,
+      activeTrays,
+    },
+    recentFarms: recentFarms.map(f => ({
+      ...f,
+      memberCount: f.farms_farmmodel_members.length,
+      trayCount: f.farm_trays_farmtraymodel.length,
+    })),
+    recentProduction,
+    recentAnnouncements,
+    usersByRole,
+  }))
 }
