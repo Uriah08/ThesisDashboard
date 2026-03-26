@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query"
 
-async function fetchDashboard(period?: string | null) {
-  const url = period ? `/api/dashboard?period=${period}` : `/api/dashboard`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error("Failed to fetch dashboard data")
-  return res.json()
+async function fetchDashboard(from?: string | null, to?: string | null) {
+  if (from && to) {
+    return fetch(`/api/dashboard?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`).then(r => r.json())
+  }
+  return fetch(`/api/dashboard`).then(r => r.json())
 }
 
-export function useDashboardQuery(period?: string | null) {
+export function useDashboardQuery(from?: string | null, to?: string | null) {
   return useQuery({
-    queryKey: ["dashboard", period],
-    queryFn: () => fetchDashboard(period),
+    queryKey: ["dashboard", from, to],
+    queryFn: () => fetchDashboard(from, to),
     refetchInterval: 30000,
   })
 }

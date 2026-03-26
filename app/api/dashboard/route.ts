@@ -3,23 +3,25 @@ import { serialize } from "@/lib/serializer"
 import { getSession } from "@/lib/session"
 import { NextResponse } from "next/server"
 
-function getPeriodStart(period: string | null): Date | null {
-  if (!period) return null
-  const now = new Date()
-  if (period === "week") return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  if (period === "month") return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  if (period === "3months") return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-  return null
-}
-
 export async function GET(request: Request) {
   const session = await getSession()
   if (!session.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  const period = searchParams.get("period")
-  const since = getPeriodStart(period)
-  const dateFilter = since ? { gte: since } : undefined
+
+  const from = searchParams.get("from")
+  const to   = searchParams.get("to")
+
+  let createdAtFilter: { gte?: Date; lte?: Date } | undefined = undefined
+  let createAtFilter:  { gte?: Date; lte?: Date } | undefined = undefined
+
+  if (from && to) {
+    const fromDate = new Date(decodeURIComponent(from))
+    const toDate   = new Date(decodeURIComponent(to))
+    toDate.setHours(23, 59, 59, 999)
+    createdAtFilter = { gte: fromDate, lte: toDate }
+    createAtFilter  = { gte: fromDate, lte: toDate }
+  }
 
   const [
     totalFarms,
@@ -34,13 +36,13 @@ export async function GET(request: Request) {
   ] = await Promise.all([
 
     prisma.farms_farmmodel.count(
-      dateFilter ? { where: { create_at: dateFilter } } : undefined
+      createAtFilter ? { where: { create_at: createAtFilter } } : undefined
     ),
 
     prisma.users_customuser.count(),
 
     prisma.production_farmproductionmodel.aggregate({
-      where: dateFilter ? { created_at: dateFilter } : undefined,
+      where: createdAtFilter ? { created_at: createdAtFilter } : undefined,
       _sum: { quantity: true },
       _count: true,
       _avg: { satisfaction: true },
@@ -49,21 +51,21 @@ export async function GET(request: Request) {
     prisma.farm_sessions_farmsessionmodel.count({
       where: {
         status: "active",
-        ...(dateFilter ? { created_at: dateFilter } : {}),
+        ...(createdAtFilter ? { created_at: createdAtFilter } : {}),
       },
     }),
 
     prisma.farm_trays_farmtraymodel.count({
       where: {
         status: "active",
-        ...(dateFilter ? { created_at: dateFilter } : {}),
+        ...(createdAtFilter ? { created_at: createdAtFilter } : {}),
       },
     }),
 
     prisma.farms_farmmodel.findMany({
       take: 6,
       orderBy: { create_at: "desc" },
-      where: dateFilter ? { create_at: dateFilter } : undefined,
+      where: createAtFilter ? { create_at: createAtFilter } : undefined,
       select: {
         id: true,
         name: true,
@@ -80,7 +82,7 @@ export async function GET(request: Request) {
     prisma.production_farmproductionmodel.findMany({
       take: 5,
       orderBy: { created_at: "desc" },
-      where: dateFilter ? { created_at: dateFilter } : undefined,
+      where: createdAtFilter ? { created_at: createdAtFilter } : undefined,
       select: {
         id: true,
         title: true,
@@ -95,7 +97,7 @@ export async function GET(request: Request) {
     prisma.announcements_announcementmodel.findMany({
       take: 4,
       orderBy: { created_at: "desc" },
-      where: dateFilter ? { created_at: dateFilter } : undefined,
+      where: createdAtFilter ? { created_at: createdAtFilter } : undefined,
       select: {
         id: true,
         title: true,

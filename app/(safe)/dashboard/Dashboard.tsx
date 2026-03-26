@@ -1,8 +1,7 @@
 "use client"
 
 import { SessionUser } from "@/lib/session"
-import { useDashboardQuery } from "@/store/dashboardApi"
-import { Fish, Users, Package, Layers, MapPin, RefreshCw } from "lucide-react"
+import { Fish, Users, Package, Layers, MapPin, RefreshCw, CalendarIcon, X } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 import { AnnouncementsAnnouncementModel, FarmsFarmModel, ProductionFarmProductionModel, UsersCustomUser } from "@/lib/types"
 import {
@@ -10,7 +9,11 @@ import {
   LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts"
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
+import { Calendar } from "@/components/ui/calendar"
+import { type DateRange } from "react-day-picker"
+import { format } from "date-fns"
+import { useDashboardQuery } from "@/store/dashboardApi"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -19,38 +22,53 @@ const StatCard = ({
 }: {
   icon: React.ReactNode, label: string, value: string | number, sub?: string
 }) => (
-  <div style={{
-    background: "#155183",
-    borderRadius: 14,
-    padding: "20px 22px",
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    color: "#fff",
-  }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.7, margin: 0 }}>
-        {label}
-      </p>
-      <div style={{
-        width: 30, height: 30, borderRadius: 8,
-        background: "rgba(255,255,255,0.15)",
-        display: "flex", alignItems: "center", justifyContent: "center"
-      }}>
+  <div className="bg-[#155183] rounded-2xl p-5 flex flex-col gap-2.5 text-white">
+    <div className="flex items-center justify-between">
+      <p className="text-[11px] font-semibold tracking-widest uppercase opacity-70 m-0">{label}</p>
+      <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
         {icon}
       </div>
     </div>
-    <p style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.02em", lineHeight: 1 }}>{value}</p>
-    {sub && <p style={{ fontSize: 11, opacity: 0.6, margin: 0 }}>{sub}</p>}
+    <p className="text-3xl font-bold tracking-tight leading-none m-0">{value}</p>
+    {sub && <p className="text-[11px] opacity-60 m-0">{sub}</p>}
   </div>
 )
 
-type Period = "week" | "month" | "3months" | null
-
 export default function Dashboard({ user }: { user: SessionUser }) {
-  
-  const [period, setPeriod] = useState<Period>(null)
-  const { data, isLoading, refetch, isFetching } = useDashboardQuery(period)
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined)
+  const [appliedRange, setAppliedRange] = useState<DateRange | undefined>(undefined)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  const fromISO = appliedRange?.from ? appliedRange.from.toISOString() : null
+  const toISO   = appliedRange?.to   ? appliedRange.to.toISOString()   : null
+
+  const { data, isLoading, refetch, isFetching } = useDashboardQuery(fromISO, toISO)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setCalendarOpen(false)
+        setPendingRange(appliedRange)
+      }
+    }
+    if (calendarOpen) document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [calendarOpen, appliedRange])
+
+  const handleApply = () => {
+    setAppliedRange(pendingRange)
+    setCalendarOpen(false)
+  }
+
+  const handleClear = () => {
+    setPendingRange(undefined)
+    setAppliedRange(undefined)
+    setCalendarOpen(false)
+  }
+
+  const hasApplied = appliedRange?.from && appliedRange?.to
+  const hasPending = pendingRange?.from && pendingRange?.to
 
   const productionChartData = data?.recentProduction
     ?.slice()
@@ -62,63 +80,139 @@ export default function Dashboard({ user }: { user: SessionUser }) {
     })) ?? []
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
-
-      {/* ── Sidebar ── */}
+    <div className="min-h-screen bg-[#f0f4f8] flex overflow-x-hidden">
       <Sidebar user={user} />
 
-      {/* ── Main content ── */}
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8">
 
         {/* Header */}
-        <div className="mt-5" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="mt-5 flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", opacity: 0.6, margin: "0 0 4px" }}>
-              Overview
-            </p>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
-              Dashboard
-            </h1>
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] opacity-60 mb-1">Overview</p>
+            <h1 className="text-[22px] font-bold text-[#0d2e47] tracking-tight">Dashboard</h1>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Period filter buttons */}
-            {([
-              { label: "All time", value: null },
-              { label: "Week",     value: "week" },
-              { label: "Month",    value: "month" },
-              { label: "3 Months", value: "3months" },
-            ] as { label: string; value: Period }[]).map(opt => (
-              <button
-                key={String(opt.value)}
-                onClick={() => setPeriod(opt.value)}
-                style={{
-                  fontSize: 12,
-                  fontWeight: 500,
-                  padding: "7px 14px",
-                  borderRadius: 8,
-                  border: "1.5px solid #155183",
-                  cursor: "pointer",
-                  transition: "all .15s",
-                  background: period === opt.value ? "#155183" : "#fff",
-                  color:      period === opt.value ? "#fff"    : "#155183",
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
 
-            {/* Refresh button */}
+            {/* Date range picker */}
+            <div ref={calendarRef} className="relative">
+              <div className="flex items-center">
+                <button
+                  onClick={() => {
+                    setPendingRange(appliedRange)
+                    setCalendarOpen(prev => !prev)
+                  }}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.75 border-[1.5px] border-[#155183] cursor-pointer transition-all whitespace-nowrap
+                    ${hasApplied
+                      ? "bg-[#155183] text-white rounded-l-lg rounded-r-none border-r-0"
+                      : "bg-white text-[#155183] rounded-lg"
+                    }`}
+                >
+                  <CalendarIcon size={13} />
+                  {hasApplied
+                    ? `${format(appliedRange!.from!, "MMM d, yyyy")} – ${format(appliedRange!.to!, "MMM d, yyyy")}`
+                    : "All time"
+                  }
+                </button>
+
+                {hasApplied && (
+                  <button
+                    onClick={handleClear}
+                    className="flex items-center justify-center px-2.5 py-1.75 rounded-r-lg border-[1.5px] border-[#155183] border-l-white/30 bg-[#155183] text-white cursor-pointer hover:bg-[#0d3d63] transition-colors"
+                  >
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+
+              {/* Calendar dropdown */}
+              {calendarOpen && (
+                <div className="absolute top-[calc(100%+8px)] right-0 z-50 bg-white rounded-2xl border-[1.5px] border-[#e2eaf2] shadow-[0_8px_32px_rgba(21,81,131,0.13)] overflow-hidden min-w-fit">
+
+                  {/* Dropdown header */}
+                  <div className="px-4 py-3 border-b border-[#f0f4f8] flex items-center justify-between">
+                    <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] m-0">
+                      Filter by date range
+                    </p>
+                    {pendingRange?.from && (
+                      <p className="text-[11px] text-[#9ab0c4] m-0">
+                        {pendingRange.to
+                          ? `${format(pendingRange.from, "MMM d")} – ${format(pendingRange.to, "MMM d, yyyy")}`
+                          : `From ${format(pendingRange.from, "MMM d, yyyy")} — pick end date`
+                        }
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Calendar with brand color overrides */}
+                  <style>{`
+                    .rdp-dashboard [aria-selected="true"],
+                    .rdp-dashboard .rdp-day_range_start,
+                    .rdp-dashboard .rdp-day_range_end {
+                      background-color: #155183 !important;
+                      color: #fff !important;
+                      border-radius: 6px !important;
+                    }
+                    .rdp-dashboard .rdp-day_range_middle {
+                      background-color: #e8f0f8 !important;
+                      color: #155183 !important;
+                      border-radius: 0 !important;
+                    }
+                    .rdp-dashboard button:hover:not([aria-selected="true"]):not(:disabled) {
+                      background-color: #f0f4f8 !important;
+                      color: #155183 !important;
+                    }
+                  `}</style>
+                  <div className="rdp-dashboard">
+                    <Calendar
+                      mode="range"
+                      defaultMonth={pendingRange?.from ?? new Date()}
+                      selected={pendingRange}
+                      onSelect={(range: DateRange | undefined) => setPendingRange(range)}
+                      numberOfMonths={2}
+                      disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
+                    />
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-2.5 border-t border-[#f0f4f8] flex items-center justify-between gap-2">
+                    <p className="text-[11px] text-[#9ab0c4] m-0">
+                      {!pendingRange?.from
+                        ? "Click a start date"
+                        : !pendingRange?.to
+                        ? "Now click an end date"
+                        : "Range selected ✓"
+                      }
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleClear}
+                        className="text-xs font-medium px-3.5 py-1.5 rounded-lg border-[1.5px] border-[#e2eaf2] bg-white text-[#9ab0c4] cursor-pointer hover:border-[#c5d5e4] transition-colors"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={handleApply}
+                        disabled={!hasPending}
+                        className={`text-xs font-semibold px-3.5 py-1.5 rounded-lg border-[1.5px] transition-all
+                          ${hasPending
+                            ? "border-[#155183] bg-[#155183] text-white cursor-pointer hover:bg-[#0d3d63]"
+                            : "border-[#e2eaf2] bg-[#e8f0f8] text-[#9ab0c4] cursor-default"
+                          }`}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Refresh */}
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                fontSize: 12, color: "#155183",
-                background: "#fff", border: "1.5px solid #155183",
-                borderRadius: 8, padding: "7px 14px", cursor: "pointer",
-                fontWeight: 500, opacity: isFetching ? 0.6 : 1, transition: "opacity .2s"
-              }}
+              className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-1.75 cursor-pointer transition-opacity ${isFetching ? "opacity-60" : "opacity-100"}`}
             >
               <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
               Refresh
@@ -127,15 +221,15 @@ export default function Dashboard({ user }: { user: SessionUser }) {
         </div>
 
         {isLoading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 256 }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center gap-3">
               <Fish size={28} color="#155183" className="animate-pulse" />
-              <p style={{ fontSize: 13, color: "#155183", opacity: 0.5, margin: 0 }}>Loading dashboard...</p>
+              <p className="text-[13px] text-[#155183] opacity-50 m-0">Loading dashboard...</p>
             </div>
           </div>
         ) : (
           <>
-            {/* ── Stat cards ── */}
+            {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <StatCard icon={<Fish size={14} color="#fff" />} label="Total Farms" value={data?.stats.totalFarms ?? 0} />
               <StatCard icon={<Users size={14} color="#fff" />} label="Total Users" value={data?.stats.totalUsers ?? 0} />
@@ -153,42 +247,31 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               />
             </div>
 
-            {/* ── Charts ── */}
+            {/* Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-
-              {/* Bar Chart — Production Quantity */}
-              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 4px" }}>
-                  Production Quantity
-                </p>
-                <p style={{ fontSize: 11, color: "#9ab0c4", margin: "0 0 16px" }}>kg per record (oldest → newest)</p>
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Production Quantity</p>
+                <p className="text-[11px] text-[#9ab0c4] mb-4">kg per record (oldest → newest)</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }}
-                    />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }} />
                     <Bar dataKey="kg" fill="#155183" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
-              {/* Line Chart — Satisfaction Trend */}
-              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 4px" }}>
-                  Satisfaction Trend
-                </p>
-                <p style={{ fontSize: 11, color: "#9ab0c4", margin: "0 0 16px" }}>score per record (1–5, oldest → newest)</p>
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Satisfaction Trend</p>
+                <p className="text-[11px] text-[#9ab0c4] mb-4">score per record (1–5, oldest → newest)</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }}
-                    />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }} />
                     <Line
                       type="monotone"
                       dataKey="satisfaction"
@@ -200,180 +283,132 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-
             </div>
 
-            {/* ── Farms + Roles ── */}
+            {/* Farms + Roles */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
               {/* Recent Farms */}
-              <div className="lg:col-span-2" style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: 0 }}>
-                    Recent Farms
-                  </p>
-                  <span style={{ fontSize: 11, color: "#9ab0c4" }}>{data?.recentFarms?.length ?? 0} shown</span>
+              <div className="lg:col-span-2 bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] m-0">Recent Farms</p>
+                  <span className="text-[11px] text-[#9ab0c4]">{data?.recentFarms?.length ?? 0} shown</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                <div className="flex flex-col">
                   {data?.recentFarms?.map((farm: FarmsFarmModel) => (
-                    <div key={farm.id} style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
-                    }} className="last:border-0">
-                      <div style={{
-                        width: 34, height: 34, borderRadius: 9,
-                        background: "#e8f0f8",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0, color: "#155183"
-                      }}>
+                    <div key={farm.id} className="flex items-center gap-3 py-2.5 border-b border-[#f0f4f8] last:border-0">
+                      <div className="w-8.5 h-8.5 rounded-[9px] bg-[#e8f0f8] flex items-center justify-center shrink-0 text-[#155183]">
                         <Fish size={14} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {farm.name}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>by {farm.users_customuser?.username}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{farm.name}</p>
+                        <p className="text-[11px] text-[#9ab0c4] m-0">by {farm.users_customuser?.username}</p>
                       </div>
-                      <div className="hidden sm:flex items-center gap-2" style={{ fontSize: 11, color: "#9ab0c4", flexShrink: 0 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                          <Users size={10} /> {farm.memberCount}
-                        </span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                          <Layers size={10} /> {farm.trayCount}
-                        </span>
-                        <span style={{
-                          background: "#e8f0f8", color: "#155183",
-                          fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20
-                        }}>
+                      <div className="hidden sm:flex items-center gap-2 text-[11px] text-[#9ab0c4] shrink-0">
+                        <span className="flex items-center gap-1"><Users size={10} /> {farm.memberCount}</span>
+                        <span className="flex items-center gap-1"><Layers size={10} /> {farm.trayCount}</span>
+                        <span className="bg-[#e8f0f8] text-[#155183] text-[10px] font-semibold px-2 py-0.5 rounded-full">
                           {new Date(farm.create_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
                         </span>
                       </div>
                     </div>
                   ))}
                   {!data?.recentFarms?.length && (
-                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No farms yet</p>
+                    <p className="text-[13px] text-[#c5d5e4] text-center py-6 m-0">No farms yet</p>
                   )}
                 </div>
               </div>
 
-              {/* Users by role */}
-              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
-                  Users by Role
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Users by Role */}
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-4">Users by Role</p>
+                <div className="flex flex-col gap-2.5">
                   {data?.usersByRole?.map((r: UsersCustomUser) => (
-                    <div key={r.role} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#155183" }} />
-                        <p style={{ fontSize: 13, color: "#0d2e47", margin: 0, textTransform: "capitalize" }}>{r.role || "—"}</p>
+                    <div key={r.role} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#155183]" />
+                        <p className="text-[13px] text-[#0d2e47] m-0 capitalize">{r.role || "—"}</p>
                       </div>
-                      <span style={{
-                        fontSize: 12, fontWeight: 700, color: "#155183",
-                        background: "#e8f0f8", padding: "2px 10px", borderRadius: 20
-                      }}>
+                      <span className="text-xs font-bold text-[#155183] bg-[#e8f0f8] px-2.5 py-0.5 rounded-full">
                         {r._count}
                       </span>
                     </div>
                   ))}
                 </div>
 
-                {/* Avg satisfaction */}
-                <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1.5px solid #f0f4f8" }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 12px" }}>
-                    Avg Satisfaction
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 32 }}>
+                <div className="mt-6 pt-5 border-t-[1.5px] border-[#f0f4f8]">
+                  <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-3">Avg Satisfaction</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[32px]">
                       {SATISFACTION_EMOJIS[Math.round(data?.stats.avgSatisfaction ?? 3) - 1]}
                     </span>
                     <div>
-                      <p style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
+                      <p className="text-[22px] font-bold text-[#0d2e47] tracking-tight m-0">
                         {Number(data?.stats.avgSatisfaction ?? 0).toFixed(1)}
-                        <span style={{ fontSize: 13, fontWeight: 400, color: "#9ab0c4" }}> / 5</span>
+                        <span className="text-[13px] font-normal text-[#9ab0c4]"> / 5</span>
                       </p>
-                      <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>across all production</p>
+                      <p className="text-[11px] text-[#9ab0c4] m-0">across all production</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ── Production + Announcements ── */}
+            {/* Production + Announcements */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               {/* Recent Production */}
-              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
-                  Recent Production
-                </p>
-                <div style={{ display: "flex", flexDirection: "column" }}>
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-4">Recent Production</p>
+                <div className="flex flex-col">
                   {data?.recentProduction?.map((p: ProductionFarmProductionModel) => (
-                    <div key={p.id} style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
-                    }} className="last:border-0">
-                      <span style={{ fontSize: 22, flexShrink: 0 }}>
-                        {SATISFACTION_EMOJIS[(p.satisfaction ?? 3) - 1]}
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {p.title}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
+                    <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-[#f0f4f8] last:border-0">
+                      <span className="text-[22px] shrink-0">{SATISFACTION_EMOJIS[(p.satisfaction ?? 3) - 1]}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{p.title}</p>
+                        <p className="text-[11px] text-[#9ab0c4] m-0 flex items-center gap-1">
                           <Fish size={9} /> {p.farms_farmmodel?.name}
-                          {p.landing && <><MapPin size={9} style={{ marginLeft: 4 }} />{p.landing}</>}
+                          {p.landing && <><MapPin size={9} className="ml-1" />{p.landing}</>}
                         </p>
                       </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#155183", margin: 0 }}>{p.quantity} kg</p>
-                        <p style={{ fontSize: 10, color: "#9ab0c4", margin: 0 }}>
+                      <div className="text-right shrink-0">
+                        <p className="text-[13px] font-bold text-[#155183] m-0">{p.quantity} kg</p>
+                        <p className="text-[10px] text-[#9ab0c4] m-0">
                           {new Date(p.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
                         </p>
                       </div>
                     </div>
                   ))}
                   {!data?.recentProduction?.length && (
-                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No production records</p>
+                    <p className="text-[13px] text-[#c5d5e4] text-center py-6 m-0">No production records</p>
                   )}
                 </div>
               </div>
 
-              {/* Recent Announcements */}
-              <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1.5px solid #e2eaf2" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 16px" }}>
-                  Announcements
-                </p>
-                <div style={{ display: "flex", flexDirection: "column" }}>
+              {/* Announcements */}
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-4">Announcements</p>
+                <div className="flex flex-col">
                   {data?.recentAnnouncements?.map((a: AnnouncementsAnnouncementModel) => (
-                    <div key={a.id} style={{
-                      display: "flex", alignItems: "flex-start", gap: 10,
-                      padding: "10px 0", borderBottom: "1px solid #f0f4f8"
-                    }} className="last:border-0">
-                      <div style={{
-                        width: 8, height: 8, borderRadius: "50%", marginTop: 5, flexShrink: 0,
-                        background: a.status === "active" ? "#22c55e" : "#c5d5e4"
-                      }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {a.title}
-                        </p>
-                        <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>
+                    <div key={a.id} className="flex items-start gap-2.5 py-2.5 border-b border-[#f0f4f8] last:border-0">
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.status === "active" ? "bg-green-500" : "bg-[#c5d5e4]"}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{a.title}</p>
+                        <p className="text-[11px] text-[#9ab0c4] m-0">
                           {a.farms_farmmodel?.name} · by {a.users_customuser?.username}
                         </p>
                       </div>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700,
-                        padding: "3px 9px", borderRadius: 20, flexShrink: 0, marginTop: 1,
-                        background: a.status === "active" ? "#dcfce7" : "#f0f4f8",
-                        color: a.status === "active" ? "#15803d" : "#9ab0c4"
-                      }}>
+                      <span className={`text-[10px] font-bold px-2.5 py-0.75 rounded-full shrink-0 mt-0.5
+                        ${a.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-[#f0f4f8] text-[#9ab0c4]"
+                        }`}>
                         {a.status}
                       </span>
                     </div>
                   ))}
                   {!data?.recentAnnouncements?.length && (
-                    <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "24px 0", margin: 0 }}>No announcements</p>
+                    <p className="text-[13px] text-[#c5d5e4] text-center py-6 m-0">No announcements</p>
                   )}
                 </div>
               </div>
