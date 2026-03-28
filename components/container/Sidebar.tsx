@@ -32,7 +32,7 @@ function SidebarContent({
     <>
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8 px-2">
-        <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5 h-8 cursor-pointer"/>
+        <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-22 h-8 cursor-pointer"/>
       </div>
 
       {/* Nav */}
@@ -99,7 +99,7 @@ export default function Sidebar({ user, active }: { user: SessionUser; active?: 
       {/* ── Mobile top bar ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-white border-b border-zinc-100">
         <div className="flex items-center gap-2">
-          <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5 h-8 cursor-pointer"/>
+          <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-22 h-8 cursor-pointer"/>
         </div>
         <button
           onClick={() => setOpen(v => !v)}
