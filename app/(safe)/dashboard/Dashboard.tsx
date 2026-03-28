@@ -7,13 +7,15 @@ import { AnnouncementsAnnouncementModel, FarmsFarmModel, ProductionFarmProductio
 import {
   BarChart, Bar,
   LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Cell
 } from "recharts"
 import { useState, useRef, useEffect } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { type DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { useDashboardQuery } from "@/store/dashboardApi"
+import { exportDashboardToExcel } from "./_components/ExportDashboard"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -71,13 +73,22 @@ export default function Dashboard({ user }: { user: SessionUser }) {
   const hasPending = pendingRange?.from && pendingRange?.to
 
   const productionChartData = data?.recentProduction
-    ?.slice()
-    .reverse()
-    .map((p: ProductionFarmProductionModel) => ({
-      name: p.title.length > 10 ? p.title.slice(0, 10) + "…" : p.title,
-      kg: p.quantity,
-      satisfaction: p.satisfaction ?? 0,
-    })) ?? []
+  ?.map((p: { date: string, kg: number, satisfaction: number }) => ({
+    name: new Date(p.date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }),
+    kg: p.kg,
+    satisfaction: p.satisfaction ?? 0,
+  })) ?? []
+
+  // With this:
+  const trayStepChartData = (() => {
+    const steps = data?.recentTraySteps ?? []
+    const totalDetected = steps.reduce((sum: number, s: { detected: number, rejects: number }) => sum + (s.detected ?? 0), 0)
+    const totalRejects  = steps.reduce((sum: number, s: { detected: number, rejects: number }) => sum + (s.rejects  ?? 0), 0)
+    return [
+      { name: "Detected", value: totalDetected },
+      { name: "Rejects",  value: totalRejects  },
+    ]
+  })()
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] flex overflow-x-hidden">
@@ -217,6 +228,16 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
               Refresh
             </button>
+            <button
+              onClick={() => exportDashboardToExcel(
+                data?.recentFarms,
+                data?.recentProduction,
+                appliedRange,
+              )}
+              className="flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-1.75 cursor-pointer transition-opacity"
+            >
+              Export
+            </button>
           </div>
         </div>
 
@@ -247,7 +268,7 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               />
             </div>
 
-            {/* Charts */}
+            {/* Charts row 1 — Production Quantity */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
                 <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Production Quantity</p>
@@ -258,14 +279,49 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }} />
-                    <Bar dataKey="kg" fill="#155183" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="kg" name="kg" fill="#155183" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
 
+              {/* Fish Detected vs Rejects — sits between the two original charts */}
+              <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+                <div className="flex items-start justify-between mb-1">
+                  <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] m-0">Fish Detected vs Rejects</p>
+                  {(() => {
+                    const steps = data?.recentTraySteps ?? []
+                    const totalDetected = steps.reduce((sum: number, s: { detected: number, rejects: number }) => sum + (s.detected ?? 0), 0)
+                    const totalRejects  = steps.reduce((sum: number, s: { detected: number, rejects: number }) => sum + (s.rejects  ?? 0), 0)
+                    const rejectRate = totalDetected > 0 ? (totalRejects / totalDetected) * 100 : 0
+                    if (rejectRate <= 15) return null
+                    return (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        ⚠️ High rejects ({rejectRate.toFixed(1)}%)
+                      </span>
+                    )
+                  })()}
+                </div>
+                <p className="text-[11px] text-[#9ab0c4] mb-4">per tray step</p>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={trayStepChartData} layout="vertical" margin={{ top: 4, right: 8, left: 16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#9ab0c4" }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      <Cell fill="#155183" />
+                      <Cell fill="#e05252" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Charts row 2 — Satisfaction Trend (full width on its own row) */}
+            <div className="mb-4">
               <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
                 <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Satisfaction Trend</p>
-                <p className="text-[11px] text-[#9ab0c4] mb-4">score per record (1–5, oldest → newest)</p>
+                <p className="text-[11px] text-[#9ab0c4] mb-4">score per record</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
@@ -302,7 +358,7 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{farm.name}</p>
-                        <p className="text-[11px] text-[#9ab0c4] m-0">by {farm.users_customuser?.username}</p>
+                        <p className="text-[11px] text-[#9ab0c4] m-0">by {farm.users_customuser?.first_name} {farm.users_customuser?.last_name}</p>
                       </div>
                       <div className="hidden sm:flex items-center gap-2 text-[11px] text-[#9ab0c4] shrink-0">
                         <span className="flex items-center gap-1"><Users size={10} /> {farm.memberCount}</span>
@@ -361,8 +417,8 @@ export default function Dashboard({ user }: { user: SessionUser }) {
               <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
                 <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-4">Recent Production</p>
                 <div className="flex flex-col">
-                  {data?.recentProduction?.map((p: ProductionFarmProductionModel) => (
-                    <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-[#f0f4f8] last:border-0">
+                  {data?.productionList?.map((p: ProductionFarmProductionModel, i: number) => (
+                    <div key={i} className="flex items-center gap-3 py-2.5 border-b border-[#f0f4f8] last:border-0">
                       <span className="text-[22px] shrink-0">{SATISFACTION_EMOJIS[(p.satisfaction ?? 3) - 1]}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{p.title}</p>
@@ -394,9 +450,6 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                       <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.status === "active" ? "bg-green-500" : "bg-[#c5d5e4]"}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#0d2e47] m-0 truncate">{a.title}</p>
-                        <p className="text-[11px] text-[#9ab0c4] m-0">
-                          {a.farms_farmmodel?.name} · by {a.users_customuser?.username}
-                        </p>
                       </div>
                       <span className={`text-[10px] font-bold px-2.5 py-0.75 rounded-full shrink-0 mt-0.5
                         ${a.status === "active"
