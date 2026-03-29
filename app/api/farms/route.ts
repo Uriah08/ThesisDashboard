@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma"
 import { serialize } from "@/lib/serializer"
 import { getSession } from "@/lib/session"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
   const session = await getSession()
@@ -55,4 +55,52 @@ export async function GET() {
       }))
     )
   )
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { name, description, password, confirmPassword, owner_id } = body
+
+    // ── Validation ──────────────────────────────────────────────
+    const errors: Record<string, string> = {}
+    if (!name?.trim()) errors.name = "Farm name is required"
+    if (!password?.trim()) errors.password = "Password is required"
+    if (!confirmPassword?.trim()) errors.confirmPassword = "Please confirm your password"
+    if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match"
+    if (!owner_id) errors.owner_id = "Please select an owner"
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ errors }, { status: 422 })
+    }
+
+    // ── Create farm ─────────────────────────────────────────────
+    const farm = await prisma.farms_farmmodel.create({
+      data: {
+        name: name.trim(),
+        description: description?.trim() ?? null,
+        owner_id: BigInt(owner_id),
+        create_at: new Date(),
+        password: password.trim(),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        create_at: true,
+      },
+    })
+
+    return NextResponse.json({
+      ...farm,
+      id: Number(farm.id)
+    }, { status: 201 })
+  } catch (err) {
+    console.error("[POST /api/farms]", err)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+  }
 }
