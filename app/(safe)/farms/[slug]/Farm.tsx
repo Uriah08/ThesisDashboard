@@ -4,12 +4,22 @@ import { SessionUser } from "@/lib/session"
 import { useFarmQuery } from "@/store/farmApi"
 import Sidebar from "@/components/container/Sidebar"
 import {
-  Fish, Users, Layers, Package, Megaphone, CalendarDays, ArrowLeft, Clock, MapPin,
-  Factory
+  Fish, Users, Layers, Package, CalendarDays, ArrowLeft, MapPin,
+  Factory,
+  CalendarIcon,
+  X
 } from "lucide-react"
 import Link from "next/link"
 import CreateProductionDialog from "../_components/CreateProductionDIalog"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { format } from "date-fns"
+import { DateRange } from "react-day-picker"
+import { Calendar } from "@/components/ui/calendar"
+import { exportFarmToExcel } from "../_components/ExportFarmExcel"
+import {
+  ResponsiveContainer, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Cell,
+} from "recharts"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -30,16 +40,6 @@ interface Tray {
   created_at: string
 }
 
-interface Session {
-  id: string
-  name: string
-  description?: string
-  status: string
-  start_time?: string
-  end_time?: string
-  created_at: string
-}
-
 interface Production {
   id: string
   title: string
@@ -49,17 +49,6 @@ interface Production {
   landing?: string
   created_at: string
 }
-
-interface Announcement {
-  id: string
-  title: string
-  content: string
-  status: string
-  created_at: string
-  expires_at?: string
-  users_customuser?: { username: string }
-}
-
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub?: string }) {
@@ -115,13 +104,43 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function FarmPage({ user, params }: { user: SessionUser; params: { id: string } }) {
     
-  const { data: farm, isLoading } = useFarmQuery(params.id)
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined)
+  const [appliedRange, setAppliedRange] = useState<DateRange | undefined>(undefined)
   const [showCreateProduction, setShowCreateProduction] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const calendarRef = useRef<HTMLDivElement>(null)
+
+  const { data: farm, isLoading } = useFarmQuery(params.id, appliedRange)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+        setCalendarOpen(false)
+        setPendingRange(appliedRange)
+      }
+    }
+    if (calendarOpen) document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [calendarOpen, appliedRange])
+
+  const handleApply = () => {
+    setAppliedRange(pendingRange)
+    setCalendarOpen(false)
+  }
+
+  const handleClear = () => {
+    setPendingRange(undefined)
+    setAppliedRange(undefined)
+    setCalendarOpen(false)
+  }
+
+  const hasApplied = appliedRange?.from && appliedRange?.to
+  const hasPending = pendingRange?.from && pendingRange?.to
 
   const sat = Math.round(farm?.avgSatisfaction ?? 0)
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
+    <div className="overflow-hidden" style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
       <Sidebar user={user} active="Farms" />
 
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8 mt-5">
@@ -165,13 +184,135 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
                 </h1>
               </div>
             </div>
-            <button
-              onClick={() => setShowCreateProduction(true)}
-              className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-3 cursor-pointer transition-opacity`}
-            >
-              <Factory size={13} />
-              Add Production
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Date range picker */}
+              <div ref={calendarRef} className="relative">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => {
+                      setPendingRange(appliedRange)
+                      setCalendarOpen(prev => !prev)
+                    }}
+                    className={`flex items-center gap-1.5 text-xs font-medium px-3.5 py-1.75 border-[1.5px] border-[#155183] cursor-pointer transition-all whitespace-nowrap
+                      ${hasApplied
+                        ? "bg-[#155183] text-white rounded-l-lg rounded-r-none border-r-0"
+                        : "bg-white text-[#155183] rounded-lg"
+                      }`}
+                  >
+                    <CalendarIcon size={13} />
+                    {hasApplied
+                      ? `${format(appliedRange!.from!, "MMM d, yyyy")} – ${format(appliedRange!.to!, "MMM d, yyyy")}`
+                      : "All time"
+                    }
+                  </button>
+  
+                  {hasApplied && (
+                    <button
+                      onClick={handleClear}
+                      className="flex items-center justify-center px-2.5 py-1.75 rounded-r-lg border-[1.5px] border-[#155183] border-l-white/30 bg-[#155183] text-white cursor-pointer hover:bg-[#0d3d63] transition-colors"
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
+                </div>
+  
+                {/* Calendar dropdown */}
+                {calendarOpen && (
+                  <div className="absolute top-[calc(100%+8px)] right-0 z-50 bg-white rounded-2xl border-[1.5px] border-[#e2eaf2] shadow-[0_8px_32px_rgba(21,81,131,0.13)] overflow-hidden min-w-fit">
+  
+                    {/* Dropdown header */}
+                    <div className="px-4 py-3 border-b border-[#f0f4f8] flex items-center justify-between">
+                      <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] m-0">
+                        Filter by date range
+                      </p>
+                      {pendingRange?.from && (
+                        <p className="text-[11px] text-[#9ab0c4] m-0">
+                          {pendingRange.to
+                            ? `${format(pendingRange.from, "MMM d")} – ${format(pendingRange.to, "MMM d, yyyy")}`
+                            : `From ${format(pendingRange.from, "MMM d, yyyy")} — pick end date`
+                          }
+                        </p>
+                      )}
+                    </div>
+  
+                    {/* Calendar with brand color overrides */}
+                    <style>{`
+                      .rdp-dashboard [aria-selected="true"],
+                      .rdp-dashboard .rdp-day_range_start,
+                      .rdp-dashboard .rdp-day_range_end {
+                        background-color: #155183 !important;
+                        color: #fff !important;
+                        border-radius: 6px !important;
+                      }
+                      .rdp-dashboard .rdp-day_range_middle {
+                        background-color: #e8f0f8 !important;
+                        color: #155183 !important;
+                        border-radius: 0 !important;
+                      }
+                      .rdp-dashboard button:hover:not([aria-selected="true"]):not(:disabled) {
+                        background-color: #f0f4f8 !important;
+                        color: #155183 !important;
+                      }
+                    `}</style>
+                    <div className="rdp-dashboard">
+                      <Calendar
+                        mode="range"
+                        defaultMonth={pendingRange?.from ?? new Date()}
+                        selected={pendingRange}
+                        onSelect={(range: DateRange | undefined) => setPendingRange(range)}
+                        numberOfMonths={2}
+                        disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
+                      />
+                    </div>
+  
+                    {/* Footer */}
+                    <div className="px-4 py-2.5 border-t border-[#f0f4f8] flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-[#9ab0c4] m-0">
+                        {!pendingRange?.from
+                          ? "Click a start date"
+                          : !pendingRange?.to
+                          ? "Now click an end date"
+                          : "Range selected ✓"
+                        }
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleClear}
+                          className="text-xs font-medium px-3.5 py-1.5 rounded-lg border-[1.5px] border-[#e2eaf2] bg-white text-[#9ab0c4] cursor-pointer hover:border-[#c5d5e4] transition-colors"
+                        >
+                          Clear
+                        </button>
+                        <button
+                          onClick={handleApply}
+                          disabled={!hasPending}
+                          className={`text-xs font-semibold px-3.5 py-1.5 rounded-lg border-[1.5px] transition-all
+                            ${hasPending
+                              ? "border-[#155183] bg-[#155183] text-white cursor-pointer hover:bg-[#0d3d63]"
+                              : "border-[#e2eaf2] bg-[#e8f0f8] text-[#9ab0c4] cursor-default"
+                            }`}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCreateProduction(true)}
+                className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-1.75 cursor-pointer transition-opacity`}
+              >
+                <Factory size={13} />
+                Add Production
+              </button>
+              <button
+                onClick={() => farm && exportFarmToExcel(farm, appliedRange)}
+                disabled={!farm}
+                className="flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-1.75 cursor-pointer transition-opacity"
+              >
+                Export
+              </button>
+            </div>
           </div>
         </div>
 
@@ -195,7 +336,11 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <StatCard icon={<Users size={13} color="#fff" />} label="Members" value={farm.memberCount} />
               <StatCard icon={<Layers size={13} color="#fff" />} label="Trays" value={farm.trayCount} sub={`${farm.activeTrayCount} active`} />
-              <StatCard icon={<Fish size={13} color="#fff" />} label="Sessions" value={farm.sessionCount} sub={`${farm.activeSessionCount} active`} />
+              <StatCard 
+              icon={<Fish size={13} color="#fff" />} 
+              label="Total Sales" 
+              value={`₱ ${Number(farm.totalSales).toLocaleString()}`}
+              />
               <StatCard
                 icon={<Package size={13} color="#fff" />}
                 label="Production"
@@ -203,6 +348,116 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
                 sub={`${farm.productionCount} records`}
               />
             </div>
+
+            {/* ── Charts ───────────────────────────────────────────────────────────── */}
+{(() => {
+  type DayAcc = Record<string, { kg: number; satisfaction: number; count: number }>
+
+const productionChartData = (Object.entries(
+  [...(farm.production ?? [])]
+    .reverse()
+    .reduce((acc: DayAcc, p: Production) => {
+      const day = new Date(p.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })
+      if (!acc[day]) acc[day] = { kg: 0, satisfaction: 0, count: 0 }
+      acc[day].kg           += Number(p.quantity)
+      acc[day].satisfaction += p.satisfaction
+      acc[day].count        += 1
+      return acc
+    }, {})
+) as [string, { kg: number; satisfaction: number; count: number }][])
+  .map(([name, val]) => ({
+    name,
+    kg:           parseFloat(val.kg.toFixed(2)),
+    satisfaction: parseFloat((val.satisfaction / val.count).toFixed(2)),
+  }))
+
+  const traySteps: { detected: number; rejects: number }[] = farm.traySteps ?? []
+  const totalDetected = traySteps.reduce((sum, s) => sum + (s.detected ?? 0), 0)
+  const totalRejects  = traySteps.reduce((sum, s) => sum + (s.rejects  ?? 0), 0)
+  const rejectRate    = totalDetected > 0 ? (totalRejects / totalDetected) * 100 : 0
+
+  const trayStepChartData = [
+    { name: "Detected", value: totalDetected },
+    { name: "Rejects",  value: totalRejects  },
+  ]
+
+  const TOOLTIP_STYLE = { borderRadius: 8, border: "1.5px solid #e2eaf2", fontSize: 12 }
+  const TICK_STYLE    = { fontSize: 10, fill: "#9ab0c4" }
+
+  return (
+    <>
+      {/* Row 1 — Production Quantity + Detected vs Rejects */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
+
+        {/* Production Quantity */}
+        <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Production Quantity</p>
+          <p className="text-[11px] text-[#9ab0c4] mb-4">kg per record (oldest → newest)</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
+              <XAxis dataKey="name" tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <YAxis tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar dataKey="kg" name="kg" fill="#155183" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Fish Detected vs Rejects */}
+        <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+          <div className="flex items-start justify-between mb-1">
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] m-0">
+              Fish Detected vs Rejects
+            </p>
+            {rejectRate > 15 && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                ⚠️ High rejects ({rejectRate.toFixed(1)}%)
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-[#9ab0c4] mb-4">per tray step</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={trayStepChartData} layout="vertical" margin={{ top: 4, right: 8, left: 16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" horizontal={false} />
+              <XAxis type="number" tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                <Cell fill="#155183" />
+                <Cell fill="#e05252" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Row 2 — Satisfaction Trend full width */}
+      <div className="mb-4">
+        <div className="bg-white rounded-2xl p-5 border-[1.5px] border-[#e2eaf2]">
+          <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-1">Satisfaction Trend</p>
+          <p className="text-[11px] text-[#9ab0c4] mb-4">score per record</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={productionChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2eaf2" vertical={false} />
+              <XAxis dataKey="name" tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={TICK_STYLE} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Line
+                type="monotone"
+                dataKey="satisfaction"
+                stroke="#155183"
+                strokeWidth={2}
+                dot={{ fill: "#155183", r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </>
+  )
+})()}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
@@ -300,42 +555,6 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
                 )}
               </Section>
 
-              {/* Sessions */}
-              <Section title={`Sessions · ${farm.sessionCount}`}>
-                {farm.sessions.length === 0 ? (
-                  <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "16px 0", margin: 0 }}>No sessions yet</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    {farm.sessions.map((s: Session) => (
-                      <div key={String(s.id)} style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        padding: "9px 0", borderBottom: "1px solid #f0f4f8",
-                      }} className="last:border-0">
-                        <div style={{
-                          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                          background: "#e8f0f8", display: "flex", alignItems: "center", justifyContent: "center", color: "#155183",
-                        }}>
-                          <Clock size={13} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0 }}>{s.name}</p>
-                          <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0, display: "flex", alignItems: "center", gap: 3 }}>
-                            <CalendarDays size={9} />
-                            {s.start_time
-                              ? new Date(s.start_time).toLocaleDateString("en-PH", { month: "short", day: "numeric" })
-                              : new Date(s.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
-                          </p>
-                        </div>
-                        <StatusBadge status={s.status} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Section>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
               {/* Production */}
               <Section title={`Production · ${farm.productionCount}`}>
                 {farm.production.length === 0 ? (
@@ -363,38 +582,6 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 700, color: "#155183", margin: 0 }}>{p.quantity} kg</p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Section>
-
-              {/* Announcements */}
-              <Section title={`Announcements · ${farm.announcements.length}`}>
-                {farm.announcements.length === 0 ? (
-                  <p style={{ fontSize: 13, color: "#c5d5e4", textAlign: "center", padding: "16px 0", margin: 0 }}>No announcements</p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    {farm.announcements.map((a: Announcement) => (
-                      <div key={String(a.id)} style={{
-                        display: "flex", alignItems: "flex-start", gap: 10,
-                        padding: "9px 0", borderBottom: "1px solid #f0f4f8",
-                      }} className="last:border-0">
-                        <div style={{
-                          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                          background: "#e8f0f8", display: "flex", alignItems: "center", justifyContent: "center", color: "#155183",
-                        }}>
-                          <Megaphone size={13} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {a.title}
-                          </p>
-                          <p style={{ fontSize: 11, color: "#9ab0c4", margin: 0 }}>
-                            by {a.users_customuser?.username} · {new Date(a.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}
-                          </p>
-                        </div>
-                        <StatusBadge status={a.status} />
                       </div>
                     ))}
                   </div>
