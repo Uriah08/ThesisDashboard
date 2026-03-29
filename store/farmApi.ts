@@ -31,17 +31,29 @@ export function useFarmsQuery() {
   })
 }
 
-async function fetchFarm(id: string) {
-  const res = await fetch(`/api/farms/${id}`)
+import { DateRange } from "react-day-picker"
+
+async function fetchFarm(id: string, range?: DateRange) {
+  const params = new URLSearchParams()
+  if (range?.from && range?.to) {
+    const to = new Date(range.to)
+    to.setHours(23, 59, 59, 999)
+
+    params.set("from", range.from.toISOString())
+    params.set("to", to.toISOString())
+  }
+
+  const qs = params.size ? `?${params}` : ""
+  const res = await fetch(`/api/farms/${id}${qs}`)
   if (!res.ok) throw new Error("Failed to fetch farm")
   return res.json()
 }
- 
-export function useFarmQuery(id: string) {
+
+export function useFarmQuery(id: string, range?: DateRange) {
   return useQuery({
-    queryKey: ["farm", id],
-    queryFn: () => fetchFarm(id),
-    enabled: !!id,
+    queryKey: ["farm", id, range?.from, range?.to],  // re-fetches when range changes
+    queryFn:  () => fetchFarm(id, range),
+    enabled:  !!id,
     refetchInterval: 30000,
   })
 }
