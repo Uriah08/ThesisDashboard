@@ -4,12 +4,14 @@ import { useState } from "react"
 import {
   Fish, Users, Layers, Search, MoreHorizontal,
   Eye, CalendarDays, ShieldCheck, Package, Megaphone,
-  TrendingUp, X, ChevronRight
+  TrendingUp, X, ChevronRight,
+  MapPlusIcon
 } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 import { useFarmsQuery } from "@/store/farmApi"
 import { SessionUser } from "@/lib/session"
 import Link from "next/link"
+import CreateFarmDialog from "./_components/CreateFarmDialog"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -312,6 +314,7 @@ export default function FarmsPage({ user }: { user: SessionUser }) {
   const { data: farms = [], isLoading } = useFarmsQuery()
   const [search, setSearch] = useState("")
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
+  const [createFarmOpen, setCreateFarmOpen] = useState(false)
 
   const filtered: Farm[] = farms.filter((f: Farm) =>
     f.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -324,6 +327,8 @@ export default function FarmsPage({ user }: { user: SessionUser }) {
 
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8 mt-5">
 
+      <CreateFarmDialog
+          open={createFarmOpen} onOpenChange={setCreateFarmOpen}/>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
@@ -337,27 +342,36 @@ export default function FarmsPage({ user }: { user: SessionUser }) {
         </div>
 
         {/* Search bar */}
-        <div style={{
-          background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 12,
-          padding: "10px 16px", marginBottom: 20,
-          display: "flex", alignItems: "center", gap: 10,
-        }}>
-          <Search size={14} color="#9ab0c4" style={{ flexShrink: 0 }} />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search farms or owners…"
-            style={{
-              flex: 1, border: "none", outline: "none",
-              fontSize: 13, color: "#0d2e47", background: "transparent",
-            }}
-          />
-          <span style={{
-            fontSize: 11, fontWeight: 600, color: "#155183",
-            background: "#e8f0f8", padding: "2px 10px", borderRadius: 20, flexShrink: 0,
-          }}>
-            {filtered.length} farm{filtered.length !== 1 ? "s" : ""}
-          </span>
+        <div className="flex items-center gap-5 mb-5">
+          <div style={{
+            background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 12,
+            padding: "10px 16px",
+            display: "flex", alignItems: "center", gap: 10,
+          }} className="flex-1">
+            <Search size={14} color="#9ab0c4" style={{ flexShrink: 0 }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search farms or owners…"
+              style={{
+                flex: 1, border: "none", outline: "none",
+                fontSize: 13, color: "#0d2e47", background: "transparent",
+              }}
+            />
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: "#155183",
+              background: "#e8f0f8", padding: "2px 10px", borderRadius: 20, flexShrink: 0,
+            }}>
+              {filtered.length} farm{filtered.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <button
+            onClick={() => setCreateFarmOpen(true)}
+            className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-3 cursor-pointer transition-opacity`}
+          >
+            <MapPlusIcon size={13} />
+            Create Farm
+          </button>
         </div>
 
         {/* Content */}

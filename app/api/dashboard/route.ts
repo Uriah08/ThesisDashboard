@@ -86,7 +86,6 @@ export async function GET(request: Request) {
 
     // announcements from notifications table
     prisma.notifications_notification.findMany({
-      take: 4,
       orderBy: { created_at: "desc" },
       where: {
         type: "announcement",
@@ -119,7 +118,6 @@ export async function GET(request: Request) {
 
     // separate findMany for the recent production list card
     prisma.production_farmproductionmodel.findMany({
-      take: 5,
       orderBy: { created_at: "desc" },
       where: createdAtFilter ? { created_at: createdAtFilter } : undefined,
       select: {
@@ -127,6 +125,7 @@ export async function GET(request: Request) {
         title: true,
         quantity: true,
         satisfaction: true,
+        total: true,
         landing: true,
         created_at: true,
         farms_farmmodel: { select: { name: true } }

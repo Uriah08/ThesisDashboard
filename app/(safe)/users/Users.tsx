@@ -3,11 +3,13 @@
 import { useState } from "react"
 import {
   Users, Search, CalendarDays,
-  Fish, Megaphone, Layers, X
+  Fish, Megaphone, Layers, X,
+  User
 } from "lucide-react"
 import Sidebar from "@/components/container/Sidebar"
 import { SessionUser } from "@/lib/session"
 import { useUsersQuery } from "@/store/usersApi"
+import RegisterUserDialog from "./_components/RegisterUserDialog"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface User {
@@ -195,6 +197,7 @@ export default function UsersPage({ user }: { user: SessionUser }) {
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [registerOpen, setRegisterOpen] = useState(false)
 
   const filtered: User[] = users.filter((u: User) => {
     const matchSearch =
@@ -207,6 +210,11 @@ export default function UsersPage({ user }: { user: SessionUser }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
+      <RegisterUserDialog
+        open={registerOpen}
+        onOpenChange={setRegisterOpen}
+        // onSuccess={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+      />
       <Sidebar user={user} active="Users" />
 
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8 mt-5">
@@ -243,24 +251,33 @@ export default function UsersPage({ user }: { user: SessionUser }) {
         </div>
 
         {/* Search */}
-        <div style={{
-          background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 12,
-          padding: "10px 16px", marginBottom: 16,
-          display: "flex", alignItems: "center", gap: 10,
-        }}>
-          <Search size={14} color="#9ab0c4" style={{ flexShrink: 0 }} />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, username or email…"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: 13, color: "#0d2e47", background: "transparent" }}
-          />
-          <span style={{
-            fontSize: 11, fontWeight: 600, color: "#155183",
-            background: "#e8f0f8", padding: "2px 10px", borderRadius: 20, flexShrink: 0,
-          }}>
-            {filtered.length} user{filtered.length !== 1 ? "s" : ""}
-          </span>
+        <div className="flex justify-between items-center gap-5 mb-5">
+          <div style={{
+            background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 12,
+            padding: "10px 16px",
+            display: "flex", alignItems: "center", gap: 10,
+          }} className="flex-1">
+            <Search size={14} color="#9ab0c4" style={{ flexShrink: 0 }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, username or email…"
+              style={{ flex: 1, border: "none", outline: "none", fontSize: 13, color: "#0d2e47", background: "transparent" }}
+            />
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: "#155183",
+              background: "#e8f0f8", padding: "2px 10px", borderRadius: 20, flexShrink: 0,
+            }}>
+              {filtered.length} user{filtered.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <button
+              onClick={() => setRegisterOpen(true)}
+              className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-3 cursor-pointer transition-opacity`}
+            >
+              <User size={13} />
+              Register User
+            </button>
         </div>
 
         {/* Table */}

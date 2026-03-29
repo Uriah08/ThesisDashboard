@@ -238,6 +238,7 @@ model production_farmproductionmodel {
   landing         String?         @db.VarChar(255)
   created_at      DateTime        @db.Timestamptz(6)
   farm_id         BigInt
+  total           Int
   farms_farmmodel farms_farmmodel @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "production_farmprodu_farm_id_f8677256_fk_farms_far")
 
   @@index([farm_id], map: "production_farmproductionmodel_farm_id_f8677256")

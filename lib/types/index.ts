@@ -128,6 +128,7 @@ export interface ProductionFarmProductionModel {
   notes?: string | null
   satisfaction: number
   quantity: number
+  total: number
   landing?: string | null
   created_at: Date
   farm_id: bigint

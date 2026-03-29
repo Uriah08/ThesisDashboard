@@ -19,6 +19,26 @@ import { exportDashboardToExcel } from "./_components/ExportDashboard"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
+type RawProduction = {
+  date: Date
+  kg?: number
+  satisfaction?: number
+}
+
+type GroupedData = {
+  date: string
+  totalKg: number
+  totalSatisfaction: number
+  count: number
+}
+
+type ChartData = {
+  date: string
+  name: string
+  kg: number
+  satisfaction: number
+}
+
 const StatCard = ({
   icon, label, value, sub
 }: {
@@ -72,12 +92,43 @@ export default function Dashboard({ user }: { user: SessionUser }) {
   const hasApplied = appliedRange?.from && appliedRange?.to
   const hasPending = pendingRange?.from && pendingRange?.to
 
-  const productionChartData = data?.recentProduction
-  ?.map((p: { date: string, kg: number, satisfaction: number }) => ({
-    name: new Date(p.date).toLocaleDateString("en-PH", { month: "short", day: "numeric" }),
-    kg: p.kg,
-    satisfaction: p.satisfaction ?? 0,
-  })) ?? []
+  const productionChartData: ChartData[] = (() => {
+    const raw: RawProduction[] = data?.recentProduction ?? []
+
+    const grouped = raw.reduce<Record<string, GroupedData>>((acc, p) => {
+      const dateKey = new Date(p.date).toLocaleDateString("en-CA") // YYYY-MM-DD
+
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          totalKg: 0,
+          totalSatisfaction: 0,
+          count: 0,
+        }
+      }
+
+      acc[dateKey].totalKg += Number(p.kg ?? 0)
+      acc[dateKey].totalSatisfaction += Number(p.satisfaction ?? 0)
+      acc[dateKey].count += 1
+
+      return acc
+    }, {})
+
+    return Object.values(grouped)
+      .map((g): ChartData => ({
+        date: g.date,
+        name: new Date(g.date).toLocaleDateString("en-PH", {
+          month: "short",
+          day: "numeric",
+        }),
+        kg: g.totalKg,
+        satisfaction:
+          g.count > 0
+            ? Number((g.totalSatisfaction / g.count).toFixed(2)) // ✅ 2 decimal places
+            : 0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  })()
 
   // With this:
   const trayStepChartData = (() => {
@@ -231,7 +282,7 @@ export default function Dashboard({ user }: { user: SessionUser }) {
             <button
               onClick={() => exportDashboardToExcel(
                 data?.recentFarms,
-                data?.recentProduction,
+                data?.productionList,
                 appliedRange,
               )}
               className="flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-1.75 cursor-pointer transition-opacity"
@@ -264,7 +315,6 @@ export default function Dashboard({ user }: { user: SessionUser }) {
                 icon={<Layers size={14} color="#fff" />}
                 label="Active Trays"
                 value={data?.stats.activeTrays ?? 0}
-                sub={`${data?.stats.activeSessions ?? 0} active sessions`}
               />
             </div>
 
