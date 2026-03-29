@@ -4,8 +4,12 @@ import { SessionUser } from "@/lib/session"
 import { useFarmQuery } from "@/store/farmApi"
 import Sidebar from "@/components/container/Sidebar"
 import {
-  Fish, Users, Layers, Package, Megaphone, CalendarDays, ArrowLeft, Clock, MapPin
+  Fish, Users, Layers, Package, Megaphone, CalendarDays, ArrowLeft, Clock, MapPin,
+  Factory
 } from "lucide-react"
+import Link from "next/link"
+import CreateProductionDialog from "../_components/CreateProductionDIalog"
+import { useState } from "react"
 
 const SATISFACTION_EMOJIS = ["😞", "😐", "🙂", "😊", "😁"]
 
@@ -110,9 +114,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function FarmPage({ user, params }: { user: SessionUser; params: { id: string } }) {
-    console.log(params);
     
   const { data: farm, isLoading } = useFarmQuery(params.id)
+  const [showCreateProduction, setShowCreateProduction] = useState(false)
 
   const sat = Math.round(farm?.avgSatisfaction ?? 0)
 
@@ -122,38 +126,52 @@ export default function FarmPage({ user, params }: { user: SessionUser; params: 
 
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8 mt-5">
 
+        <CreateProductionDialog
+          open={showCreateProduction}
+          onOpenChange={setShowCreateProduction}
+          farms={params.id}
+        />
+
         {/* Back + header */}
         <div style={{ marginBottom: 24 }}>
-          <a
+          <Link
             href="/farms"
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               fontSize: 12, color: "#155183", fontWeight: 500,
               textDecoration: "none", marginBottom: 12, opacity: 0.7,
-            }}
-          >
-            <ArrowLeft size={13} /> Back to Farms
-          </a>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            {/* Farm image */}
-            <div style={{
-              width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-              background: farm?.image_url
-                ? `url(${farm.image_url}) center/cover no-repeat`
-                : "linear-gradient(135deg, #e8f0f8, #c8ddf0)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "1.5px solid #e2eaf2",
             }}>
-              {!farm?.image_url && <Fish size={20} color="#155183" opacity={0.4} />}
+            <ArrowLeft size={13} /> Back to Farms
+          </Link>
+          <div className="flex justify-between items-center">
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              {/* Farm image */}
+              <div style={{
+                width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                background: farm?.image_url
+                  ? `url(${farm.image_url}) center/cover no-repeat`
+                  : "linear-gradient(135deg, #e8f0f8, #c8ddf0)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: "1.5px solid #e2eaf2",
+              }}>
+                {!farm?.image_url && <Fish size={20} color="#155183" opacity={0.4} />}
+              </div>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", opacity: 0.6, margin: "0 0 2px" }}>
+                  Farm
+                </p>
+                <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
+                  {isLoading ? "Loading…" : farm?.name}
+                </h1>
+              </div>
             </div>
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", opacity: 0.6, margin: "0 0 2px" }}>
-                Farm
-              </p>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
-                {isLoading ? "Loading…" : farm?.name}
-              </h1>
-            </div>
+            <button
+              onClick={() => setShowCreateProduction(true)}
+              className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-3 cursor-pointer transition-opacity`}
+            >
+              <Factory size={13} />
+              Add Production
+            </button>
           </div>
         </div>
 
