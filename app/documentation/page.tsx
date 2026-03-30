@@ -357,7 +357,7 @@ useEffect(() => {
       {/* ── Header ── */}
       <header className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-slate-200 bg-white/95 backdrop-blur-sm flex items-center px-6 gap-4">
         <div className="flex items-center gap-2.5">
-          <Image onClick={() => router.push('/')} src="/icon.png" alt="FiScan" width={50} height={50} className="w-22 h-8 cursor-pointer"/>
+          <Image onClick={() => router.push('/')} src="/main-logo.png" alt="FiScan" width={50} height={50} className="w-22 h-8 cursor-pointer"/>
           <span className="text-[11px] font-medium bg-[#e8f0f8] text-[#155183] px-2 py-0.5 rounded-full border border-[#c0d8ef]">
             Docs
           </span>
