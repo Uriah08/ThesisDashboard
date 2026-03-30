@@ -66,7 +66,7 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 md:px-16 h-16 bg-white/90 backdrop-blur-md transition-all duration-300 ${scrolled ? "border-b border-zinc-100" : ""}`}>
         <div className="flex items-center gap-3">
-          <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
+          <Image src="/main-logo.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
           <Image src="/doa.png" alt="DOA" width={50} height={50} className="w-10"/>
         </div>
 
@@ -227,7 +227,7 @@ export default function LandingPage() {
 
       {/* ── FOOTER ── */}
       <footer className="px-8 md:px-16 py-8 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
+        <Image src="/main-logo.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
         <p className="text-zinc-400 text-xs">© {new Date().getFullYear()} FiScan. All rights reserved.</p>
       </footer>
 

@@ -75,7 +75,7 @@ export default function SignInPage() {
 
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-10">
-            <Image src="/icon.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
+            <Image src="/main-logo.png" alt="FiScan" width={50} height={50} className="w-17.5"/>
           </div>
 
           {/* Heading */}
