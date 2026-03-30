@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     id: user.id.toString(),
     username: user.username,
     email: user.email ?? "",
+    role: user.role
   }
   await session.save()
 
