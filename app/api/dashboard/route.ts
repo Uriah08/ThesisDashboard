@@ -61,7 +61,6 @@ export async function GET(request: Request) {
     }),
 
     prisma.farms_farmmodel.findMany({
-      take: 6,
       orderBy: { create_at: "desc" },
       select: {
         id: true,
