@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Call weather cron endpoint
         run: |
-          curl -X GET "${{ secrets.APP_URL }}/api/weather"
+          curl -X GET "https://fiscan-phi.vercel.app/api/weather"
 
 # name: Weather Cron Job
 
