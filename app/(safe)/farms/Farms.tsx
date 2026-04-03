@@ -41,85 +41,47 @@ function FarmCard({ farm, onView }: { farm: Farm; onView: (f: Farm) => void }) {
 
   return (
     <div
-      style={{
-        background: "#fff",
-        border: "1.5px solid #e2eaf2",
-        borderRadius: 14,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        transition: "box-shadow .15s, transform .15s",
-        cursor: "pointer",
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.boxShadow = "0 4px 20px rgba(21,81,131,0.10)"
-        e.currentTarget.style.transform = "translateY(-1px)"
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.boxShadow = "none"
-        e.currentTarget.style.transform = "none"
-      }}
+      className="bg-white border-[1.5px] border-[#e2eaf2] rounded-2xl overflow-hidden flex flex-col cursor-pointer transition-all hover:shadow-[0_4px_20px_rgba(21,81,131,0.10)] hover:-translate-y-px"
       onClick={() => onView(farm)}
     >
       {/* Image / placeholder */}
-      <div style={{
-        height: 100,
-        background: farm.image_url
-          ? `url(${farm.image_url}) center/cover no-repeat`
-          : "linear-gradient(135deg, #e8f0f8 0%, #c8ddf0 100%)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        position: "relative", flexShrink: 0,
-      }}>
-        {!farm.image_url && <Fish size={28} color="#155183" opacity={0.25} />}
+      <div
+        className="h-24 flex items-center justify-center relative shrink-0"
+        style={{
+          background: farm.image_url
+            ? `url(${farm.image_url}) center/cover no-repeat`
+            : "linear-gradient(135deg, #e8f0f8 0%, #c8ddf0 100%)",
+        }}
+      >
+        {!farm.image_url && <Fish size={28} className="text-[#155183] opacity-25" />}
 
         {/* Owner pill */}
-        <div style={{
-          position: "absolute", bottom: 8, left: 10,
-          background: "rgba(255,255,255,0.92)",
-          borderRadius: 20, padding: "2px 9px",
-          fontSize: 10, fontWeight: 600, color: "#155183",
-          display: "flex", alignItems: "center", gap: 4,
-        }}>
+        <div className="absolute bottom-2 left-2.5 bg-white/90 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-[#155183] flex items-center gap-1">
           <ShieldCheck size={9} />
           {farm.users_customuser?.username ?? "—"}
         </div>
 
         {/* Menu */}
         <div
-          style={{ position: "absolute", top: 8, right: 8 }}
-          onClick={e => e.stopPropagation()}
+          className="absolute top-2 right-2"
+          onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={() => setMenuOpen(v => !v)}
-            style={{
-              width: 26, height: 26, borderRadius: 7,
-              background: "rgba(255,255,255,0.92)",
-              border: "none", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#155183",
-            }}
+            onClick={() => setMenuOpen((v) => !v)}
+            className="w-[26px] h-[26px] rounded-lg bg-white/90 border-0 cursor-pointer flex items-center justify-center text-[#155183] hover:bg-white transition-colors"
           >
             <MoreHorizontal size={13} />
           </button>
           {menuOpen && (
             <>
-              <div style={{ position: "fixed", inset: 0, zIndex: 9 }} onClick={() => setMenuOpen(false)} />
-              <div style={{
-                position: "absolute", top: 30, right: 0, zIndex: 10,
-                background: "#fff", border: "1.5px solid #e2eaf2",
-                borderRadius: 10, padding: "4px 0", minWidth: 130,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-              }}>
+              <div
+                className="fixed inset-0 z-[9]"
+                onClick={() => setMenuOpen(false)}
+              />
+              <div className="absolute top-8 right-0 z-10 bg-white border-[1.5px] border-[#e2eaf2] rounded-xl py-1 min-w-[130px] shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
                 <button
                   onClick={() => { onView(farm); setMenuOpen(false) }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    width: "100%", padding: "8px 14px",
-                    fontSize: 12, color: "#0d2e47", background: "none",
-                    border: "none", cursor: "pointer",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "#f0f4f8")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "none")}
+                  className="flex items-center gap-2 w-full px-3.5 py-2 text-xs text-[#0d2e47] bg-transparent border-0 cursor-pointer hover:bg-[#f0f4f8] transition-colors"
                 >
                   <Eye size={12} /> View details
                 </button>
@@ -130,37 +92,42 @@ function FarmCard({ farm, onView }: { farm: Farm; onView: (f: Farm) => void }) {
       </div>
 
       {/* Body */}
-      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="p-3.5 flex-1 flex flex-col gap-2.5">
         <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#0d2e47", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p className="text-[13px] font-bold text-[#0d2e47] m-0 truncate">
             {farm.name}
           </p>
           {farm.description ? (
-            <p style={{
-              fontSize: 11, color: "#9ab0c4", margin: "2px 0 0", lineHeight: 1.4,
-              overflow: "hidden", textOverflow: "ellipsis",
-              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const,
-            }}>
+            <p
+              className="text-[11px] text-[#9ab0c4] mt-0.5 m-0 leading-snug"
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+              }}
+            >
               {farm.description}
             </p>
           ) : (
-            <p style={{ fontSize: 11, color: "#c5d5e4", margin: "2px 0 0", fontStyle: "italic" }}>No description</p>
+            <p className="text-[11px] text-[#c5d5e4] mt-0.5 m-0 italic">No description</p>
           )}
         </div>
 
         {/* Mini stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+        <div className="grid grid-cols-3 gap-1.5">
           {[
             { label: "Members", value: farm.memberCount, icon: <Users size={9} /> },
             { label: "Trays", value: farm.trayCount, icon: <Layers size={9} /> },
             { label: "Sessions", value: farm.sessionCount, icon: <Fish size={9} /> },
-          ].map(s => (
-            <div key={s.label} style={{
-              background: "#f0f4f8", borderRadius: 8, padding: "6px 4px",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-            }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#155183", lineHeight: 1 }}>{s.value}</span>
-              <span style={{ fontSize: 9, color: "#9ab0c4", display: "flex", alignItems: "center", gap: 2 }}>
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="bg-[#f0f4f8] rounded-lg py-1.5 px-1 flex flex-col items-center gap-0.5"
+            >
+              <span className="text-sm font-bold text-[#155183] leading-none">{s.value}</span>
+              <span className="text-[9px] text-[#9ab0c4] flex items-center gap-1">
                 {s.icon} {s.label}
               </span>
             </div>
@@ -168,13 +135,17 @@ function FarmCard({ farm, onView }: { farm: Farm; onView: (f: Farm) => void }) {
         </div>
 
         {/* Footer */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-          <span style={{ fontSize: 10, color: "#9ab0c4", display: "flex", alignItems: "center", gap: 3 }}>
+        <div className="flex items-center justify-between mt-auto pt-0.5">
+          <span className="text-[10px] text-[#9ab0c4] flex items-center gap-1">
             <CalendarDays size={9} />
-            {new Date(farm.create_at).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+            {new Date(farm.create_at).toLocaleDateString("en-PH", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
           </span>
           {farm.avgSatisfaction > 0 && (
-            <span style={{ fontSize: 13 }}>
+            <span className="text-[13px]">
               {SATISFACTION_EMOJIS[Math.max(0, Math.min(4, sat - 1))]}
             </span>
           )}
@@ -191,7 +162,14 @@ function FarmDrawer({ farm, onClose }: { farm: Farm; onClose: () => void }) {
   const detailRows = [
     { label: "Owner", value: farm.users_customuser?.username ?? "—" },
     { label: "Email", value: farm.users_customuser?.email ?? "—" },
-    { label: "Created", value: new Date(farm.create_at).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" }) },
+    {
+      label: "Created",
+      value: new Date(farm.create_at).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    },
   ]
 
   const statTiles = [
@@ -210,64 +188,62 @@ function FarmDrawer({ farm, onClose }: { farm: Farm; onClose: () => void }) {
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.18)", zIndex: 100 }} />
-      <div style={{
-        position: "fixed", top: 0, right: 0, height: "100%", width: 360,
-        background: "#fff", zIndex: 101,
-        boxShadow: "-4px 0 32px rgba(21,81,131,0.10)",
-        display: "flex", flexDirection: "column", overflowY: "auto",
-      }}>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/20 z-[100]"
+      />
+
+      {/* Drawer: full-width on mobile, fixed 360px on sm+ */}
+      <div className="fixed top-0 right-0 h-full w-full sm:w-[360px] bg-white z-[101] shadow-2xl flex flex-col overflow-y-auto">
+
         {/* Hero */}
-        <div style={{
-          height: 130, flexShrink: 0,
-          background: farm.image_url
-            ? `url(${farm.image_url}) center/cover no-repeat`
-            : "linear-gradient(135deg, #e8f0f8 0%, #b8d4ec 100%)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          position: "relative",
-        }}>
-          {!farm.image_url && <Fish size={36} color="#155183" opacity={0.2} />}
+        <div
+          className="h-32 shrink-0 flex items-center justify-center relative"
+          style={{
+            background: farm.image_url
+              ? `url(${farm.image_url}) center/cover no-repeat`
+              : "linear-gradient(135deg, #e8f0f8 0%, #b8d4ec 100%)",
+          }}
+        >
+          {!farm.image_url && <Fish size={36} className="text-[#155183] opacity-20" />}
           <button
             onClick={onClose}
-            style={{
-              position: "absolute", top: 12, right: 12,
-              width: 28, height: 28, borderRadius: 8,
-              background: "rgba(255,255,255,0.92)", border: "none",
-              cursor: "pointer", color: "#155183",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
+            className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-white/90 border-0 cursor-pointer text-[#155183] flex items-center justify-center hover:bg-white transition-colors"
           >
             <X size={14} />
           </button>
         </div>
 
-        <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div className="p-5 flex flex-col gap-5">
 
           {/* Title */}
           <div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0d2e47", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+            <h2 className="text-[17px] font-bold text-[#0d2e47] m-0 mb-1 tracking-tight">
               {farm.name}
             </h2>
-            <p style={{ fontSize: 12, color: "#9ab0c4", margin: 0 }}>
+            <p className="text-xs text-[#9ab0c4] m-0">
               {farm.description ?? "No description provided"}
             </p>
           </div>
 
           {/* Stat grid */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 10px" }}>
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-2.5 m-0">
               Overview
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              {statTiles.map(s => (
-                <div key={s.label} style={{
-                  background: "#f0f4f8", borderRadius: 10, padding: "10px 8px",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-                }}>
-                  <span style={{ color: "#155183" }}>{s.icon}</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: "#0d2e47", lineHeight: 1 }}>{s.value}</span>
-                  <span style={{ fontSize: 9, color: "#9ab0c4", textAlign: "center" }}>{s.label}</span>
-                  {s.sub && <span style={{ fontSize: 9, color: "#155183", fontWeight: 600 }}>{s.sub}</span>}
+            <div className="grid grid-cols-3 gap-2">
+              {statTiles.map((s) => (
+                <div
+                  key={s.label}
+                  className="bg-[#f0f4f8] rounded-xl p-2.5 flex flex-col items-center gap-0.5"
+                >
+                  <span className="text-[#155183]">{s.icon}</span>
+                  <span className="text-base font-bold text-[#0d2e47] leading-none">{s.value}</span>
+                  <span className="text-[9px] text-[#9ab0c4] text-center">{s.label}</span>
+                  {s.sub && (
+                    <span className="text-[9px] text-[#155183] font-semibold">{s.sub}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -275,16 +251,18 @@ function FarmDrawer({ farm, onClose }: { farm: Farm; onClose: () => void }) {
 
           {/* Details */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", margin: "0 0 10px" }}>
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] mb-2.5 m-0">
               Details
             </p>
-            {detailRows.map(row => (
-              <div key={row.label} style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "9px 0", borderBottom: "1px solid #f0f4f8",
-              }}>
-                <span style={{ fontSize: 12, color: "#9ab0c4" }}>{row.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#0d2e47", maxWidth: 200, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {detailRows.map((row, i) => (
+              <div
+                key={row.label}
+                className={`flex justify-between items-center gap-3 py-2.5 ${
+                  i < detailRows.length - 1 ? "border-b border-[#f0f4f8]" : ""
+                }`}
+              >
+                <span className="text-xs text-[#9ab0c4] shrink-0">{row.label}</span>
+                <span className="text-xs font-semibold text-[#0d2e47] text-right truncate max-w-[55%]">
                   {row.value}
                 </span>
               </div>
@@ -294,12 +272,7 @@ function FarmDrawer({ farm, onClose }: { farm: Farm; onClose: () => void }) {
           {/* View full button */}
           <Link
             href={`/farms/${farm.id}`}
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              background: "#155183", color: "#fff", borderRadius: 10,
-              padding: "11px", fontSize: 13, fontWeight: 600,
-              textDecoration: "none",
-            }}
+            className="flex items-center justify-center gap-1.5 bg-[#155183] text-white rounded-xl py-3 text-[13px] font-semibold no-underline hover:bg-[#0d3f6b] transition-colors"
           >
             View Full Farm <ChevronRight size={14} />
           </Link>
@@ -322,74 +295,62 @@ export default function FarmsPage({ user }: { user: SessionUser }) {
   )
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f4f8", display: "flex" }}>
-      <Sidebar active="Farms" user={user}/>
+    <div className="min-h-screen bg-[#f0f4f8] flex">
+      <Sidebar active="Farms" user={user} />
 
       <main className="flex-1 lg:ml-56 pt-16 lg:pt-0 p-4 md:p-6 lg:p-8 mt-5">
+        <CreateFarmDialog open={createFarmOpen} onOpenChange={setCreateFarmOpen} />
 
-      <CreateFarmDialog
-          open={createFarmOpen} onOpenChange={setCreateFarmOpen}/>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="flex items-start justify-between mb-5 gap-3">
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#155183", opacity: 0.6, margin: "0 0 4px" }}>
+            <p className="text-[11px] font-semibold tracking-widest uppercase text-[#155183] opacity-60 mb-1 m-0">
               Management
             </p>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0d2e47", margin: 0, letterSpacing: "-0.02em" }}>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#0d2e47] tracking-tight m-0">
               Farms
             </h1>
           </div>
+
+          {/* Create button */}
+          <button
+            onClick={() => setCreateFarmOpen(true)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3 py-2 cursor-pointer hover:bg-[#e8f0f8] transition-colors whitespace-nowrap shrink-0"
+          >
+            <MapPlusIcon size={13} />
+            <span className="hidden sm:inline">Create Farm</span>
+            <span className="sm:hidden">Create</span>
+          </button>
         </div>
 
         {/* Search bar */}
-        <div className="flex items-center gap-5 mb-5">
-          <div style={{
-            background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 12,
-            padding: "10px 16px",
-            display: "flex", alignItems: "center", gap: 10,
-          }} className="flex-1">
-            <Search size={14} color="#9ab0c4" style={{ flexShrink: 0 }} />
+        <div className="flex items-center gap-3 mb-5">
+          <div className="flex-1 bg-white border-[1.5px] border-[#e2eaf2] rounded-xl px-4 py-2.5 flex items-center gap-2.5">
+            <Search size={14} className="text-[#9ab0c4] shrink-0" />
             <input
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search farms or owners…"
-              style={{
-                flex: 1, border: "none", outline: "none",
-                fontSize: 13, color: "#0d2e47", background: "transparent",
-              }}
+              className="flex-1 border-none outline-none text-[13px] text-[#0d2e47] bg-transparent placeholder:text-[#c5d5e4] min-w-0"
             />
-            <span style={{
-              fontSize: 11, fontWeight: 600, color: "#155183",
-              background: "#e8f0f8", padding: "2px 10px", borderRadius: 20, flexShrink: 0,
-            }}>
+            <span className="text-[11px] font-semibold text-[#155183] bg-[#e8f0f8] px-2.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
               {filtered.length} farm{filtered.length !== 1 ? "s" : ""}
             </span>
           </div>
-          <button
-            onClick={() => setCreateFarmOpen(true)}
-            className={`flex items-center gap-1.5 text-xs font-medium text-[#155183] bg-white border-[1.5px] border-[#155183] rounded-lg px-3.5 py-3 cursor-pointer transition-opacity`}
-          >
-            <MapPlusIcon size={13} />
-            Create Farm
-          </button>
         </div>
 
         {/* Content */}
         {isLoading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              <Fish size={28} color="#155183" className="animate-pulse" />
-              <p style={{ fontSize: 13, color: "#155183", opacity: 0.5, margin: 0 }}>Loading farms…</p>
+          <div className="flex items-center justify-center h-48">
+            <div className="flex flex-col items-center gap-2.5">
+              <Fish size={28} className="text-[#155183] animate-pulse" />
+              <p className="text-[13px] text-[#155183] opacity-50 m-0">Loading farms…</p>
             </div>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{
-            background: "#fff", border: "1.5px solid #e2eaf2", borderRadius: 14,
-            display: "flex", flexDirection: "column", alignItems: "center",
-            justifyContent: "center", padding: "60px 20px", gap: 10,
-          }}>
-            <Fish size={32} color="#155183" opacity={0.2} />
-            <p style={{ fontSize: 14, color: "#9ab0c4", margin: 0 }}>
+          <div className="bg-white border-[1.5px] border-[#e2eaf2] rounded-2xl flex flex-col items-center justify-center py-16 px-5 gap-2.5">
+            <Fish size={32} className="text-[#155183] opacity-20" />
+            <p className="text-sm text-[#9ab0c4] m-0">
               {search ? "No farms match your search" : "No farms yet"}
             </p>
           </div>
