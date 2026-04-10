@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useState, useEffect } from "react"
+import { useHeroStatsQuery } from "@/store/heroApi"
 
 const NAV_LINKS = ["Features", "How It Works", "About", "Download"]
 
@@ -53,6 +54,8 @@ const STEPS = [
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
+
+  const { data } = useHeroStatsQuery()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -110,15 +113,19 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Decorative stat row */}
-          <div className="mt-20 flex flex-wrap gap-x-12 gap-y-6">
-            {[["500+", "Farms registered"], ["12k+", "Batches logged"], ["₱2M+", "Sales tracked"]].map(([val, label]) => (
-              <div key={label}>
-                <p className="text-2xl font-bold text-[#155183]">{val}</p>
-                <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
+            <div className="mt-20 flex flex-wrap gap-x-12 gap-y-6">
+              {[
+                [`${data?.farms || 0}`, "Farms registered"],
+                [`${data?.logs || 0}`, "Trays logged"],
+                [`₱${data?.totalProduction?.toLocaleString() || 0}+`, "Sales tracked"],
+              ].map(([val, label]) => (
+                <div key={label}>
+                  <p className="text-2xl font-bold text-[#155183]">{val}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
+                </div>
+              ))}
+            </div>
+          
         <Image src={'/cover.jpg'} width={1000} height={1000} alt="Cover" className="absolute right-0 top-0 z-10 
              mask-[linear-gradient(to_right,transparent,black)] 
              [WebkitMaskImage:linear-gradient(to_right,transparent,black)] hidden lg:block"/>
