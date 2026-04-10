@@ -419,7 +419,7 @@ useEffect(() => {
           <div className="max-w-3xl mx-auto px-6 py-10 pb-24">
 
             {/* Page title */}
-            <div className="mb-10 pb-8 border-b border-slate-100">
+            <div className="pb-8 border-b border-slate-100">
               <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
                 <span>Docs</span>
                 <span>/</span>
@@ -437,6 +437,21 @@ useEffect(() => {
                 <Badge>Tuyo Farming</Badge>
               </div>
             </div>
+
+            <div className="flex items-center justify-between gap-4 mb-10 rounded-xl border border-[#c0d8ef] bg-[#e8f0f8] px-5 py-4">
+              <div>
+                <p className="text-sm font-semibold text-[#0d2e47]">Get the TuyoApp</p>
+                <p className="text-xs text-slate-500 mt-0.5">Download the mobile app and start monitoring your fish drying process.</p>
+              </div>
+              <a
+                href="#"
+                className="shrink-0 inline-flex items-center gap-1.5 bg-[#155183] text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-[#184b72] transition-colors"
+              >
+                <span>↓</span>
+                Install App
+              </a>
+            </div>
+
 
             {/* ── Getting Started ── */}
             <SectionHeading id="getting-started">Getting Started</SectionHeading>
