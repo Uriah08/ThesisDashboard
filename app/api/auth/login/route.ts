@@ -5,8 +5,10 @@ import { getSession } from "@/lib/session"
 export async function POST(req: Request) {
   const { username, password } = await req.json()
 
+  const lowerUsername = username.toLowerCase()
+
   const user = await prisma.users_customuser.findUnique({
-    where: { username },
+    where: { username: lowerUsername },
     select: { id: true, username: true, email: true, password: true, is_staff: true, role: true }
   })
 

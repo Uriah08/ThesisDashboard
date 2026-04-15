@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       data: {
         first_name:    first_name.trim(),
         last_name:     last_name.trim(),
-        username:      username.trim(),
+        username:      username.trim().toLowerCase(),
         email:         email.trim().toLowerCase(),
         password:      hashed,
         role,
