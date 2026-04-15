@@ -4,6 +4,8 @@ interface CreateAnnouncementPayload {
   title: string
   body: string
   expires_at?: string
+  // undefined = all users; populated array = specific farms
+  farm_ids?: string[]
 }
 
 async function fetchAnnouncements() {
