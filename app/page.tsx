@@ -211,7 +211,7 @@ export default function LandingPage() {
       </section>
 
 
-      <section id="download" className="px-8 md:px-16 py-32 border-t border-zinc-100">
+      <section id="download" className="px-8 md:px-16 py-32 border-t border-zinc-100 h-screen flex justify-center items-center">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-xs font-semibold tracking-widest uppercase text-[#155183] mb-4">Download</p>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-6 leading-tight">
@@ -221,7 +221,10 @@ export default function LandingPage() {
             Download FiScan and start scanning, logging, and managing your sundried fish production today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#" className="inline-flex items-center gap-3 bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-4 rounded-lg transition-all hover:-translate-y-0.5 text-sm">
+            <a 
+              href="/application-499abc21-eb61-4e58-af6a-e52b139d4500.apk"
+              download="FiScan.apk"
+              className="inline-flex items-center gap-3 bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-4 rounded-lg transition-all hover:-translate-y-0.5 text-sm">
               <span className="text-xl">⬇</span>
               <div className="text-left">
                 <p className="text-[10px] opacity-70 leading-none mb-0.5">Download for</p>
