@@ -429,7 +429,7 @@ useEffect(() => {
                 Help Center
               </h1>
               <p className="text-slate-500 text-[15px] leading-relaxed">
-                Complete guide for using TuyoApp — from account setup to scanning your sun-dried fish.
+                Complete guide for using FISCAN app — from account setup to scanning your sun-dried fish.
               </p>
               <div className="flex gap-2 mt-4 flex-wrap">
                 <Badge>v1.0</Badge>
@@ -438,13 +438,47 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4 mb-10 rounded-xl border border-[#c0d8ef] bg-[#e8f0f8] px-5 py-4">
+            {/* Video Section */}
+            <div className="mt-8 mb-10">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">
+                Video tutorial
+              </p>
+              <h2 className="text-xl font-semibold text-[#0d2e47] mb-1 pb-2 border-b border-slate-100">
+                How to use FiScan
+              </h2>
+              <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                Watch this short tutorial to learn how to set up your account, scan your fish, and monitor your drying progress step by step.
+              </p>
+
+              {/* Responsive 16:9 embed */}
+              <div
+                className="relative w-full rounded-xl overflow-hidden border border-[#c0d8ef]"
+                style={{ paddingBottom: "56.25%", height: 0 }}
+              >
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full"
+                  src="https://www.youtube.com/embed/VwGAgOuY6PI"
+                  title="FISCAN App Tutorial"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+
+              <p className="text-xs text-slate-400 text-center mt-2">
+                Can&apos;t follow along? Continue reading the guide below.
+              </p>
+            </div>
+
+
+            <div className="mt-5 flex items-center justify-between gap-4 mb-10 rounded-xl border border-[#c0d8ef] bg-[#e8f0f8] px-5 py-4">
               <div>
-                <p className="text-sm font-semibold text-[#0d2e47]">Get the TuyoApp</p>
+                <p className="text-sm font-semibold text-[#0d2e47]">Get the FISCAN app</p>
                 <p className="text-xs text-slate-500 mt-0.5">Download the mobile app and start monitoring your fish drying process.</p>
               </div>
               <a
-                href="#"
+                href="/application-499abc21-eb61-4e58-af6a-e52b139d4500.apk"
+                download="FiScan.apk"
                 className="shrink-0 inline-flex items-center gap-1.5 bg-[#155183] text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-[#184b72] transition-colors"
               >
                 <span>↓</span>
@@ -455,7 +489,7 @@ useEffect(() => {
 
             {/* ── Getting Started ── */}
             <SectionHeading id="getting-started">Getting Started</SectionHeading>
-            <P>Follow these steps to create your account and start using TuyoApp.</P>
+            <P>Follow these steps to create your account and start using FISCAN app.</P>
 
             <SubHeading id="create-account">1. Create an Account</SubHeading>
             <StepCard number={1} title="Open the app and tap Register">
@@ -486,7 +520,7 @@ useEffect(() => {
 
             {/* ── Navigating ── */}
             <SectionHeading id="navigating">Navigating the App</SectionHeading>
-            <P>TuyoApp has five main sections accessible from the bottom navigation bar.</P>
+            <P>FISCAN app has five main sections accessible from the bottom navigation bar.</P>
 
             <SubHeading id="dashboard">1. Dashboard</SubHeading>
             <P>
