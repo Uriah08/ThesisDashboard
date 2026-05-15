@@ -457,7 +457,7 @@ useEffect(() => {
               >
                 <iframe
                   className="absolute top-0 left-0 w-full h-full"
-                  src="https://www.youtube.com/embed/VwGAgOuY6PI"
+                  src="https://www.youtube.com/embed/81fYdrg_FWY"
                   title="FISCAN App Tutorial"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -477,7 +477,7 @@ useEffect(() => {
                 <p className="text-xs text-slate-500 mt-0.5">Download the mobile app and start monitoring your fish drying process.</p>
               </div>
               <a
-                href="/application-499abc21-eb61-4e58-af6a-e52b139d4500.apk"
+                href="/application-bb29c07d-e541-4aec-bb3e-eeec72578615.apk"
                 download="FiScan.apk"
                 className="shrink-0 inline-flex items-center gap-1.5 bg-[#155183] text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-[#184b72] transition-colors"
               >

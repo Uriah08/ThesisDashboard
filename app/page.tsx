@@ -222,7 +222,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
-              href="/application-499abc21-eb61-4e58-af6a-e52b139d4500.apk"
+              href="/application-bb29c07d-e541-4aec-bb3e-eeec72578615.apk"
               download="FiScan.apk"
               className="inline-flex items-center gap-3 bg-[#155183] hover:bg-[#1e6aab] text-white font-medium px-8 py-4 rounded-lg transition-all hover:-translate-y-0.5 text-sm">
               <span className="text-xl">⬇</span>
